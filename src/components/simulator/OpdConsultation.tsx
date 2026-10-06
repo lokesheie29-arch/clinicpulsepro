@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Search, Plus, Trash2, ArrowRight } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Search, Trash2, ArrowRight } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
 import { doctors } from '../../data/mockData';
 import { PrescriptionItem, PatientDetails } from '../../types';

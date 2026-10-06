@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Package, AlertTriangle, PlusCircle } from 'lucide-react';
+import { useState } from 'react';
+import { AlertTriangle, PlusCircle } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
 import { Medicine } from '../../types';
 import { v4 as uuidv4 } from 'uuid';

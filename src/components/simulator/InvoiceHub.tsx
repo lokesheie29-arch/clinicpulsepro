@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { Send, Printer, Smartphone, CheckCircle } from 'lucide-react';
+import { useMemo } from 'react';
+import { Printer, Smartphone, CheckCircle } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
 import { doctors } from '../../data/mockData';
 import confetti from 'canvas-confetti';

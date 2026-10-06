@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { IndianRupee, TrendingUp, Users, Activity } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';

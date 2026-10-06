@@ -7,3 +7,9 @@
     @apply bg-slate-50 text-slate-900;
   }
 }
+
+@media print {
+  body {
+    background: white;
+  }
+}
