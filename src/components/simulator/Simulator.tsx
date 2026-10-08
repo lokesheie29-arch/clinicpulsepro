@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Stethoscope, Receipt, Pill, BarChart3, RefreshCw } from 'lucide-react';
+import { Stethoscope, Receipt, Pill, BarChart3, RefreshCw, Microscope } from 'lucide-react';
 import { OpdConsultation } from './OpdConsultation';
 import { InvoiceHub } from './InvoiceHub';
 import { PharmacyInventory } from './PharmacyInventory';
 import { Analytics } from './Analytics';
+import { LabDiagnostics } from './LabDiagnostics';
 import { useAppState } from '../../context/AppStateContext';
 
 export const Simulator = () => {
@@ -19,6 +20,7 @@ export const Simulator = () => {
   const renderTab = () => {
     switch (activeTab) {
       case 'opd': return <OpdConsultation onComplete={handleInvoiceGenerated} />;
+      case 'lab': return <LabDiagnostics onSwitchTab={setActiveTab} />;
       case 'invoice': return <InvoiceHub selectedInvoiceId={selectedInvoiceId} />;
       case 'pharmacy': return <PharmacyInventory />;
       case 'analytics': return <Analytics />;
@@ -45,9 +47,10 @@ export const Simulator = () => {
       <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 print:border-none print:shadow-none print:rounded-none">
         <div className="flex overflow-x-auto border-b border-slate-200 bg-slate-50/50 print:hidden">
           <TabButton id="opd" active={activeTab} setActive={setActiveTab} icon={<Stethoscope className="h-5 w-5"/>} label="1. OPD Studio" />
-          <TabButton id="invoice" active={activeTab} setActive={setActiveTab} icon={<Receipt className="h-5 w-5"/>} label="2. Billing & WhatsApp" />
-          <TabButton id="pharmacy" active={activeTab} setActive={setActiveTab} icon={<Pill className="h-5 w-5"/>} label="3. FEFO Pharmacy" />
-          <TabButton id="analytics" active={activeTab} setActive={setActiveTab} icon={<BarChart3 className="h-5 w-5"/>} label="4. Financial Analytics" />
+          <TabButton id="lab" active={activeTab} setActive={setActiveTab} icon={<Microscope className="h-5 w-5"/>} label="2. Lab & Diagnostics" />
+          <TabButton id="invoice" active={activeTab} setActive={setActiveTab} icon={<Receipt className="h-5 w-5"/>} label="3. Billing & WhatsApp" />
+          <TabButton id="pharmacy" active={activeTab} setActive={setActiveTab} icon={<Pill className="h-5 w-5"/>} label="4. FEFO Pharmacy" />
+          <TabButton id="analytics" active={activeTab} setActive={setActiveTab} icon={<BarChart3 className="h-5 w-5"/>} label="5. Financial Analytics" />
         </div>
         
         <div className="p-6 md:p-8 min-h-[600px] bg-slate-50/30 print:p-0 print:bg-white print:min-h-0">

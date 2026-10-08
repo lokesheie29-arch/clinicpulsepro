@@ -1,4 +1,4 @@
-import { Medicine, Invoice } from '../types';
+import { Medicine, Invoice, LabTest, LabReport } from '../types';
 
 export const initialMedicines: Medicine[] = [
   {
@@ -101,3 +101,14 @@ export const doctors = [
   { id: 'doc-1', name: 'Dr. Rahul Sharma', specialty: 'General Physician', regNo: 'MCI-12345' },
   { id: 'doc-2', name: 'Dr. Priya Desai', specialty: 'Pediatrician', regNo: 'MCI-67890' },
 ];
+
+
+export const initialLabTests: LabTest[] = [
+  { id: 'lt-1', name: 'Complete Blood Count (CBC)', category: 'Hematology', price: 400, referenceRange: 'Normal', unit: '' },
+  { id: 'lt-2', name: 'Fasting Blood Sugar (FBS)', category: 'Biochemistry', price: 150, referenceRange: '70 - 100', unit: 'mg/dL' },
+  { id: 'lt-3', name: 'Lipid Profile', category: 'Biochemistry', price: 800, referenceRange: 'Normal', unit: '' },
+  { id: 'lt-4', name: 'Thyroid Profile (T3, T4, TSH)', category: 'Endocrinology', price: 600, referenceRange: 'Normal', unit: '' },
+  { id: 'lt-5', name: 'Urine Routine', category: 'Pathology', price: 200, referenceRange: 'Normal', unit: '' }
+];
+
+export const initialLabReports: LabReport[] = [];

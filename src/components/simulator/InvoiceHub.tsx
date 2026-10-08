@@ -106,6 +106,17 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
                   <td className="py-3 text-right font-medium">₹{item.totalPrice.toFixed(2)}</td>
                 </tr>
               ))}
+              {invoice.labItems?.map(item => (
+                <tr key={item.id} className="border-b border-slate-100 bg-purple-50/30">
+                  <td className="py-3">
+                    <div className="font-medium text-purple-900">{item.testName}</div>
+                    <div className="text-xs text-slate-500">Lab Diagnostic Test</div>
+                  </td>
+                  <td className="py-3 text-center">1</td>
+                  <td className="py-3 text-right">₹{item.price.toFixed(2)}</td>
+                  <td className="py-3 text-right font-medium">₹{item.price.toFixed(2)}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
 
