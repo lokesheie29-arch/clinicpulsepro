@@ -45,16 +45,18 @@ export const Simulator = () => {
       </div>
 
       <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 print:border-none print:shadow-none print:rounded-none">
-        <div className="flex overflow-x-auto border-b border-slate-200 bg-slate-50/50 print:hidden">
-          <TabButton id="opd" active={activeTab} setActive={setActiveTab} icon={<Stethoscope className="h-5 w-5"/>} label="1. OPD Studio" />
-          <TabButton id="lab" active={activeTab} setActive={setActiveTab} icon={<Microscope className="h-5 w-5"/>} label="2. Lab & Diagnostics" />
-          <TabButton id="invoice" active={activeTab} setActive={setActiveTab} icon={<Receipt className="h-5 w-5"/>} label="3. Billing & WhatsApp" />
-          <TabButton id="pharmacy" active={activeTab} setActive={setActiveTab} icon={<Pill className="h-5 w-5"/>} label="4. FEFO Pharmacy" />
-          <TabButton id="analytics" active={activeTab} setActive={setActiveTab} icon={<BarChart3 className="h-5 w-5"/>} label="5. Financial Analytics" />
-        </div>
-        
-        <div className="p-6 md:p-8 min-h-[600px] bg-slate-50/30 print:p-0 print:bg-white print:min-h-0">
-          {renderTab()}
+        <div className="flex flex-col md:flex-row">
+          <div className="flex flex-col md:w-64 shrink-0 border-b md:border-b-0 md:border-r border-slate-200 bg-slate-50/50 print:hidden divide-y divide-slate-200">
+            <TabButton id="opd" active={activeTab} setActive={setActiveTab} icon={<Stethoscope className="h-5 w-5"/>} label="1. OPD Studio" />
+            <TabButton id="lab" active={activeTab} setActive={setActiveTab} icon={<Microscope className="h-5 w-5"/>} label="2. Lab & Diagnostics" />
+            <TabButton id="invoice" active={activeTab} setActive={setActiveTab} icon={<Receipt className="h-5 w-5"/>} label="3. Billing & WhatsApp" />
+            <TabButton id="pharmacy" active={activeTab} setActive={setActiveTab} icon={<Pill className="h-5 w-5"/>} label="4. FEFO Pharmacy" />
+            <TabButton id="analytics" active={activeTab} setActive={setActiveTab} icon={<BarChart3 className="h-5 w-5"/>} label="5. Financial Analytics" />
+          </div>
+          
+          <div className="flex-1 p-6 md:p-8 min-h-[600px] bg-slate-50/30 print:p-0 print:bg-white print:min-h-0">
+            {renderTab()}
+          </div>
         </div>
       </div>
     </div>
@@ -66,7 +68,7 @@ const TabButton = ({ id, active, setActive, icon, label }: any) => {
   return (
     <button
       onClick={() => setActive(id)}
-      className={`flex items-center space-x-2 px-6 py-4 font-medium text-sm whitespace-nowrap transition-all border-b-2 ${
+      className={`flex items-center space-x-3 px-6 py-4 font-medium text-sm w-full transition-all border-l-4 ${
         isActive 
           ? 'border-teal-600 text-teal-700 bg-white' 
           : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
