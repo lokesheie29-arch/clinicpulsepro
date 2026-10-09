@@ -89,17 +89,72 @@ export const LabDiagnostics = ({ onSwitchTab }: { onSwitchTab: (tab: string) => 
     });
   };
 
-  const shareViaWhatsApp = () => {
+  const generateAndSharePDF = async (method: 'whatsapp' | 'email') => {
     if (!selectedReport) return;
-    const text = `*Lab Report for ${selectedReport.patient.name}*\nReport ID: ${selectedReport.id}\nStatus: ${selectedReport.status}\n\n*Results:*\n${selectedReport.tests.map(t => `- ${t.testName}: ${t.result || 'Pending'} ${t.unit}`).join('\n')}\n\nThank you,\nClinicPulse Pro Diagnostics`;
-    window.open(`https://wa.me/91${selectedReport.patient.phone}?text=${encodeURIComponent(text)}`, '_blank');
-  };
 
-  const shareViaEmail = () => {
-    if (!selectedReport) return;
-    const subject = `Lab Report - ${selectedReport.patient.name}`;
-    const body = `Lab Report for ${selectedReport.patient.name}\nReport ID: ${selectedReport.id}\nStatus: ${selectedReport.status}\n\nResults:\n${selectedReport.tests.map(t => `- ${t.testName}: ${t.result || 'Pending'} ${t.unit}`).join('\n')}\n\nThank you,\nClinicPulse Pro Diagnostics`;
-    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    const element = document.getElementById('printable-lab-report');
+    if (!element) return;
+
+    // We dynamically import to avoid breaking SSR if that ever becomes a thing,
+    // though this is Vite. But it's good practice.
+    const html2canvas = (await import('html2canvas')).default;
+    const jsPDF = (await import('jspdf')).default;
+
+    // Temporarily hide inputs and show text for printing
+    const inputs = element.querySelectorAll('input');
+    inputs.forEach(input => {
+      const span = document.createElement('span');
+      span.textContent = input.value;
+      span.className = 'pdf-result-span font-bold';
+      input.style.display = 'none';
+      input.parentNode?.insertBefore(span, input);
+    });
+
+    try {
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      
+      const pdfBlob = pdf.output('blob');
+      const fileName = `LabReport_${selectedReport.patient.name.replace(/\s+/g, '_')}.pdf`;
+      const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+      // Try Web Share API for Mobile/Safari/Edge
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `Lab Report - ${selectedReport.patient.name}`,
+          text: `Please find attached the lab report for ${selectedReport.patient.name}.`,
+        });
+      } else {
+        // Fallback for Desktop Chrome/Firefox
+        pdf.save(fileName);
+        
+        // Open the respective app
+        if (method === 'whatsapp') {
+          const text = `Hi, I have downloaded your lab report. I will attach the PDF file to this chat.`;
+          window.open(`https://wa.me/91${selectedReport.patient.phone}?text=${encodeURIComponent(text)}`, '_blank');
+        } else if (method === 'email') {
+          const subject = `Lab Report - ${selectedReport.patient.name}`;
+          const body = `Hi,\n\nI have generated your lab report PDF. (Please attach the downloaded PDF file here).\n\nThank you,\nClinicPulse Pro Diagnostics`;
+          window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        }
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      // Restore inputs
+      inputs.forEach(input => {
+        input.style.display = 'block';
+        const span = input.parentNode?.querySelector('.pdf-result-span');
+        if (span) span.remove();
+      });
+    }
   };
 
   return (
@@ -259,11 +314,11 @@ export const LabDiagnostics = ({ onSwitchTab }: { onSwitchTab: (tab: string) => 
                 <FileText className="h-4 w-4" />
                 <span>Print PDF</span>
               </button>
-              <button onClick={shareViaWhatsApp} className="flex items-center justify-center space-x-2 bg-[#25D366] text-white py-2.5 rounded-xl font-semibold hover:bg-[#128C7E] transition-colors text-sm">
+              <button onClick={() => generateAndSharePDF('whatsapp')} className="flex items-center justify-center space-x-2 bg-[#25D366] text-white py-2.5 rounded-xl font-semibold hover:bg-[#128C7E] transition-colors text-sm">
                 <Share2 className="h-4 w-4" />
                 <span>WhatsApp</span>
               </button>
-              <button onClick={shareViaEmail} className="flex items-center justify-center space-x-2 bg-blue-600 text-white py-2.5 rounded-xl font-semibold hover:bg-blue-700 transition-colors text-sm">
+              <button onClick={() => generateAndSharePDF('email')} className="flex items-center justify-center space-x-2 bg-blue-600 text-white py-2.5 rounded-xl font-semibold hover:bg-blue-700 transition-colors text-sm">
                 <Mail className="h-4 w-4" />
                 <span>Email</span>
               </button>
