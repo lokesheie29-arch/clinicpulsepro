@@ -1,29 +1,119 @@
 import { useState } from 'react';
+import { useUser } from '@clerk/react';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { LandingPage } from './components/LandingPage';
 import { Simulator } from './components/simulator/Simulator';
+import { ProfileModal } from './components/ProfileModal';
 import { AppStateProvider } from './context/AppStateContext';
+import { Building2, UserCircle2, Calendar, ShieldCheck } from 'lucide-react';
 
 const AppContent = () => {
+  const { isSignedIn, user, isLoaded } = useUser();
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showLandingPage, setShowLandingPage] = useState(false);
+
+  // Fallback while Clerk auth state is initializing
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center space-y-3">
+          <div className="w-10 h-10 border-4 border-teal-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-slate-500 font-medium text-sm">Loading ClinicPulse Pro...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const staffName = user?.firstName
+    ? `${user.firstName} ${user.lastName || ''}`.trim()
+    : user?.primaryEmailAddress?.emailAddress?.split('@')[0] || 'Staff Member';
+
+  const roleTitle = (user?.unsafeMetadata?.roleTitle as string) || 'Consultant / Staff';
+  const clinicName = (user?.unsafeMetadata?.clinicName as string) || 'ClinicPulse Pro Center';
 
   return (
-    <div className="min-h-screen flex flex-col font-sans">
-      <Navbar onAdminClick={() => setShowAdmin(!showAdmin)} />
+    <div className="min-h-screen flex flex-col font-sans bg-slate-50">
+      <Navbar
+        onAdminClick={() => setShowAdmin(!showAdmin)}
+        onProfileClick={() => setShowProfileModal(true)}
+        showLandingPage={showLandingPage}
+        onToggleLandingPage={() => setShowLandingPage(!showLandingPage)}
+      />
 
       {showAdmin && (
-        <div className="bg-amber-50 border-b border-amber-200 py-2 px-4 text-center text-sm text-amber-800 font-medium">
-          Admin Panel mode is currently in Preview.
+        <div className="bg-amber-50 border-b border-amber-200 py-2.5 px-4 text-center text-sm text-amber-800 font-medium flex items-center justify-center gap-2">
+          <ShieldCheck className="h-4 w-4 text-amber-600" />
+          <span>Admin Access Active: Master Account ({user?.primaryEmailAddress?.emailAddress})</span>
         </div>
       )}
 
       <main className="flex-grow">
-        <LandingPage />
-        <Simulator />
+        {/* If signed in and NOT toggling public website preview: Go STRAIGHT to Clinic Modules */}
+        {isSignedIn && !showLandingPage ? (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12">
+            {/* Staff Welcome & Clinic Info Header */}
+            <div className="bg-gradient-to-r from-navy-900 via-navy-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg mb-8 relative overflow-hidden">
+              <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-teal-500/10 skew-x-12 pointer-events-none" />
+              
+              <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-semibold mb-3 border border-teal-500/30">
+                    <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
+                    <span>Clinic Operational System • Live</span>
+                  </div>
+                  <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                    Welcome back, {staffName}
+                  </h1>
+                  <p className="text-slate-300 text-sm mt-1.5 flex flex-wrap items-center gap-3">
+                    <span className="flex items-center gap-1.5">
+                      <UserCircle2 className="h-4 w-4 text-teal-400" />
+                      {roleTitle}
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1.5">
+                      <Building2 className="h-4 w-4 text-teal-400" />
+                      {clinicName}
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1.5 text-slate-400">
+                      <Calendar className="h-4 w-4" />
+                      {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                    </span>
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowProfileModal(true)}
+                    className="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all backdrop-blur-sm"
+                  >
+                    Edit Profile Details
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* DIRECT ACCESS TO MODULES */}
+            <Simulator />
+          </div>
+        ) : (
+          /* When signed out or explicitly previewing public website: Show Landing Page */
+          <>
+            <LandingPage />
+            <Simulator />
+          </>
+        )}
       </main>
 
       <Footer />
+
+      {/* Profile Modal */}
+      <ProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+      />
     </div>
   );
 };
