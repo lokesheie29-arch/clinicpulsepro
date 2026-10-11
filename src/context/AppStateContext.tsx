@@ -14,6 +14,9 @@ interface AppStateContextType {
   restockMedicine: (id: string, qtyToAdd: number) => void;
   addLabReport: (report: LabReport) => void;
   updateLabReport: (reportId: string, updatedReport: LabReport) => void;
+  addLabTest: (test: LabTest) => void;
+  updateLabTest: (id: string, test: LabTest) => void;
+  deleteLabTest: (id: string) => void;
   resetDemoData: () => void;
 }
 
@@ -202,6 +205,18 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   };
 
+  const addLabTest = (test: LabTest) => {
+    setLabTests(prev => [...prev, test]);
+  };
+
+  const updateLabTest = (id: string, updatedTest: LabTest) => {
+    setLabTests(prev => prev.map(t => t.id === id ? updatedTest : t));
+  };
+
+  const deleteLabTest = (id: string) => {
+    setLabTests(prev => prev.filter(t => t.id !== id));
+  };
+
   const updateMedicineStock = (id: string, qtyToDeduct: number) => {
     setMedicines(prev => prev.map(med => {
       if (med.id === id) {
@@ -239,7 +254,7 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     <AppStateContext.Provider value={{
       medicines, invoices, labTests, labReports,
       addInvoice, updateMedicineStock, addMedicine, restockMedicine,
-      addLabReport, updateLabReport, resetDemoData
+      addLabReport, updateLabReport, addLabTest, updateLabTest, deleteLabTest, resetDemoData
     }}>
       {children}
     </AppStateContext.Provider>

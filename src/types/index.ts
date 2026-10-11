@@ -62,13 +62,22 @@ export interface UserRole {
   status: 'active' | 'pending' | 'revoked';
 }
 
+export interface LabSubTest {
+  id: string;
+  name: string;
+  referenceRange: string;
+  unit: string;
+  result?: string;
+}
+
 export interface LabTest {
   id: string;
   name: string;
   category: string;
   price: number;
-  referenceRange: string;
-  unit: string;
+  referenceRange?: string;
+  unit?: string;
+  subTests?: LabSubTest[];
 }
 
 export interface LabTestOrder {
@@ -77,8 +86,9 @@ export interface LabTestOrder {
   testName: string;
   price: number;
   result?: string;
-  referenceRange: string;
-  unit: string;
+  referenceRange?: string;
+  unit?: string;
+  subTests?: LabSubTest[];
 }
 
 export interface LabReport {

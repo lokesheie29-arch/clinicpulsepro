@@ -104,11 +104,73 @@ export const doctors = [
 
 
 export const initialLabTests: LabTest[] = [
-  { id: 'lt-1', name: 'Complete Blood Count (CBC)', category: 'Hematology', price: 400, referenceRange: 'Normal', unit: '' },
-  { id: 'lt-2', name: 'Fasting Blood Sugar (FBS)', category: 'Biochemistry', price: 150, referenceRange: '70 - 100', unit: 'mg/dL' },
-  { id: 'lt-3', name: 'Lipid Profile', category: 'Biochemistry', price: 800, referenceRange: 'Normal', unit: '' },
-  { id: 'lt-4', name: 'Thyroid Profile (T3, T4, TSH)', category: 'Endocrinology', price: 600, referenceRange: 'Normal', unit: '' },
-  { id: 'lt-5', name: 'Urine Routine', category: 'Pathology', price: 200, referenceRange: 'Normal', unit: '' }
+  {
+    id: 'lt-1',
+    name: 'Complete Blood Count (CBC)',
+    category: 'Hematology',
+    price: 400,
+    referenceRange: 'See parameters',
+    unit: '',
+    subTests: [
+      { id: 'sub-1', name: 'Hemoglobin (Hb)', referenceRange: '13.0 - 17.0', unit: 'g/dL' },
+      { id: 'sub-2', name: 'Total WBC Count', referenceRange: '4000 - 11000', unit: 'cells/cu.mm' },
+      { id: 'sub-3', name: 'RBC Count', referenceRange: '4.5 - 5.5', unit: 'mil/uL' },
+      { id: 'sub-4', name: 'Platelet Count', referenceRange: '1.5 - 4.5', unit: 'lakhs/cu.mm' }
+    ]
+  },
+  {
+    id: 'lt-2',
+    name: 'Fasting Blood Sugar (FBS)',
+    category: 'Biochemistry',
+    price: 150,
+    referenceRange: '70 - 100',
+    unit: 'mg/dL',
+    subTests: [
+      { id: 'sub-5', name: 'Fasting Blood Glucose', referenceRange: '70 - 100', unit: 'mg/dL' }
+    ]
+  },
+  {
+    id: 'lt-3',
+    name: 'Lipid Profile',
+    category: 'Biochemistry',
+    price: 800,
+    referenceRange: 'See parameters',
+    unit: '',
+    subTests: [
+      { id: 'sub-6', name: 'Total Cholesterol', referenceRange: '< 200', unit: 'mg/dL' },
+      { id: 'sub-7', name: 'HDL Cholesterol (Good)', referenceRange: '> 40', unit: 'mg/dL' },
+      { id: 'sub-8', name: 'LDL Cholesterol (Bad)', referenceRange: '< 100', unit: 'mg/dL' },
+      { id: 'sub-9', name: 'Serum Triglycerides', referenceRange: '< 150', unit: 'mg/dL' }
+    ]
+  },
+  {
+    id: 'lt-4',
+    name: 'Thyroid Profile (T3, T4, TSH)',
+    category: 'Endocrinology',
+    price: 600,
+    referenceRange: 'See parameters',
+    unit: '',
+    subTests: [
+      { id: 'sub-10', name: 'Total T3', referenceRange: '0.8 - 2.0', unit: 'ng/mL' },
+      { id: 'sub-11', name: 'Total T4', referenceRange: '5.1 - 14.1', unit: 'ug/dL' },
+      { id: 'sub-12', name: 'TSH (Ultrasensitive)', referenceRange: '0.27 - 4.2', unit: 'uIU/mL' }
+    ]
+  },
+  {
+    id: 'lt-5',
+    name: 'Urine Routine Examination',
+    category: 'Pathology',
+    price: 200,
+    referenceRange: 'Normal',
+    unit: '',
+    subTests: [
+      { id: 'sub-13', name: 'Color / Appearance', referenceRange: 'Pale Yellow / Clear', unit: '' },
+      { id: 'sub-14', name: 'Urine pH', referenceRange: '5.0 - 7.5', unit: '' },
+      { id: 'sub-15', name: 'Specific Gravity', referenceRange: '1.005 - 1.030', unit: '' },
+      { id: 'sub-16', name: 'Urine Sugar', referenceRange: 'Nil', unit: '' },
+      { id: 'sub-17', name: 'Urine Protein / Albumin', referenceRange: 'Nil', unit: '' }
+    ]
+  }
 ];
 
 export const initialLabReports: LabReport[] = [];

@@ -1,11 +1,24 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Microscope, Search, Plus, Trash2, ArrowRight, CheckCircle, Share2, Mail, FileText } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
 import { LabTest, LabTestOrder, LabReport, PatientDetails, Invoice } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
+import { useUser } from '@clerk/react';
 
 export const LabDiagnostics = ({ onSwitchTab }: { onSwitchTab: (tab: string) => void }) => {
   const { labTests, labReports, addLabReport, addInvoice, updateLabReport } = useAppState();
+  const { user } = useUser();
+
+  const labFacilityName =
+    (user?.unsafeMetadata?.labFacilityName as string) ||
+    localStorage.getItem('clinicpulse_lab_facility') ||
+    'CLINICPULSE PRO DIAGNOSTIC LABS';
+  const labInCharge =
+    (user?.unsafeMetadata?.labInCharge as string) ||
+    'Dr. Chief Pathologist, MD';
+  const labNabl =
+    (user?.unsafeMetadata?.labNablLicense as string) ||
+    'NABL Certified Diagnostics';
   
   // Left Side: Ordering
   const [patient, setPatient] = useState<PatientDetails>({
@@ -32,8 +45,9 @@ export const LabDiagnostics = ({ onSwitchTab }: { onSwitchTab: (tab: string) => 
         testId: test.id,
         testName: test.name,
         price: test.price,
-        referenceRange: test.referenceRange,
-        unit: test.unit
+        referenceRange: test.referenceRange || '',
+        unit: test.unit || '',
+        subTests: test.subTests ? test.subTests.map(s => ({ ...s, result: '' })) : []
       }]);
     }
   };
@@ -82,10 +96,41 @@ export const LabDiagnostics = ({ onSwitchTab }: { onSwitchTab: (tab: string) => 
     if (!selectedReport) return;
     const updatedTests = selectedReport.tests.map(t => t.id === testOrderId ? { ...t, result: resultValue } : t);
     
+    const isCompleted = updatedTests.every(t => {
+      if (t.subTests && t.subTests.length > 0) {
+        return t.subTests.every(s => s.result && s.result.trim() !== '');
+      }
+      return t.result && t.result.trim() !== '';
+    });
+
     updateLabReport(selectedReport.id, {
       ...selectedReport,
       tests: updatedTests,
-      status: updatedTests.every(t => t.result && t.result.trim() !== '') ? 'Completed' : 'Pending'
+      status: isCompleted ? 'Completed' : 'Pending'
+    });
+  };
+
+  const handleUpdateSubTestResult = (testOrderId: string, subTestId: string, resultValue: string) => {
+    if (!selectedReport) return;
+    const updatedTests = selectedReport.tests.map(t => {
+      if (t.id === testOrderId && t.subTests) {
+        const updatedSubs = t.subTests.map(s => s.id === subTestId ? { ...s, result: resultValue } : s);
+        return { ...t, subTests: updatedSubs };
+      }
+      return t;
+    });
+
+    const isCompleted = updatedTests.every(t => {
+      if (t.subTests && t.subTests.length > 0) {
+        return t.subTests.every(s => s.result && s.result.trim() !== '');
+      }
+      return t.result && t.result.trim() !== '';
+    });
+
+    updateLabReport(selectedReport.id, {
+      ...selectedReport,
+      tests: updatedTests,
+      status: isCompleted ? 'Completed' : 'Pending'
     });
   };
 
@@ -245,8 +290,8 @@ export const LabDiagnostics = ({ onSwitchTab }: { onSwitchTab: (tab: string) => 
               <div className="border-b-2 border-purple-600 pb-4 mb-6">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h1 className="text-2xl font-black text-navy-900 tracking-tight">CLINICPULSE PRO LABS</h1>
-                    <p className="text-sm text-slate-500 font-medium mt-1">Advanced Diagnostic Center</p>
+                    <h1 className="text-2xl font-black text-navy-900 tracking-tight uppercase">{labFacilityName}</h1>
+                    <p className="text-sm text-slate-500 font-medium mt-1">{labInCharge} • {labNabl}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-bold text-navy-900">Report ID: {selectedReport.id}</p>
@@ -281,22 +326,54 @@ export const LabDiagnostics = ({ onSwitchTab }: { onSwitchTab: (tab: string) => 
                     </tr>
                   </thead>
                   <tbody>
-                    {selectedReport.tests.map(test => (
-                      <tr key={test.id} className="border-b border-slate-100">
-                        <td className="py-3 font-medium text-navy-900">{test.testName}</td>
-                        <td className="py-3">
-                          <input 
-                            type="text" 
-                            value={test.result || ''}
-                            onChange={(e) => handleUpdateResult(test.id, e.target.value)}
-                            placeholder="Enter result..."
-                            className="w-full max-w-[120px] p-1.5 border border-slate-200 rounded bg-slate-50 focus:bg-white focus:ring-1 focus:ring-purple-500 outline-none print:border-none print:bg-transparent print:p-0 print:font-bold"
-                          />
-                        </td>
-                        <td className="py-3 text-slate-500">{test.unit}</td>
-                        <td className="py-3 text-slate-500">{test.referenceRange}</td>
-                      </tr>
-                    ))}
+                    {selectedReport.tests.map(test => {
+                      const hasSubTests = test.subTests && test.subTests.length > 0;
+                      if (hasSubTests) {
+                        return (
+                          <React.Fragment key={test.id}>
+                            <tr className="bg-purple-50/70 border-b border-purple-100">
+                              <td colSpan={4} className="py-2 px-3 text-xs font-bold uppercase tracking-wider text-purple-900">
+                                {test.testName} <span className="font-normal text-[11px] text-purple-600 ml-1">({test.subTests?.length} Parameters)</span>
+                              </td>
+                            </tr>
+                            {test.subTests?.map(sub => (
+                              <tr key={sub.id} className="border-b border-slate-100 hover:bg-slate-50/50">
+                                <td className="py-2.5 pl-6 font-medium text-navy-900 text-sm">
+                                  • {sub.name}
+                                </td>
+                                <td className="py-2.5">
+                                  <input 
+                                    type="text" 
+                                    value={sub.result || ''}
+                                    onChange={(e) => handleUpdateSubTestResult(test.id, sub.id, e.target.value)}
+                                    placeholder="Enter result..."
+                                    className="w-full max-w-[120px] p-1.5 border border-slate-200 rounded bg-slate-50 focus:bg-white focus:ring-1 focus:ring-purple-500 outline-none text-sm font-semibold print:border-none print:bg-transparent print:p-0 print:font-bold"
+                                  />
+                                </td>
+                                <td className="py-2.5 text-slate-500 text-xs">{sub.unit || '-'}</td>
+                                <td className="py-2.5 text-slate-500 text-xs font-mono">{sub.referenceRange || 'Normal'}</td>
+                              </tr>
+                            ))}
+                          </React.Fragment>
+                        );
+                      }
+                      return (
+                        <tr key={test.id} className="border-b border-slate-100">
+                          <td className="py-3 font-medium text-navy-900">{test.testName}</td>
+                          <td className="py-3">
+                            <input 
+                              type="text" 
+                              value={test.result || ''}
+                              onChange={(e) => handleUpdateResult(test.id, e.target.value)}
+                              placeholder="Enter result..."
+                              className="w-full max-w-[120px] p-1.5 border border-slate-200 rounded bg-slate-50 focus:bg-white focus:ring-1 focus:ring-purple-500 outline-none print:border-none print:bg-transparent print:p-0 print:font-bold"
+                            />
+                          </td>
+                          <td className="py-3 text-slate-500 text-xs">{test.unit || '-'}</td>
+                          <td className="py-3 text-slate-500 text-xs font-mono">{test.referenceRange || 'Normal'}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
