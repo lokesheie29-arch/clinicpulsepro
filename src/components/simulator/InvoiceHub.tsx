@@ -3,9 +3,24 @@ import { Printer, Smartphone, CheckCircle } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
 import { doctors } from '../../data/mockData';
 import confetti from 'canvas-confetti';
+import { useUser } from '@clerk/react';
 
 export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | null }) => {
   const { invoices } = useAppState();
+  const { user } = useUser();
+
+  const hospitalName =
+    (user?.unsafeMetadata?.clinicName as string) ||
+    localStorage.getItem('clinicpulse_clinic_name') ||
+    'CLINICPULSE PRO HOSPITAL';
+  const hospitalAddress =
+    (user?.unsafeMetadata?.clinicAddress as string) ||
+    localStorage.getItem('clinicpulse_clinic_address') ||
+    '123 Health Avenue, Anna Nagar, Chennai, TN - 600040';
+  const hospitalGst =
+    (user?.unsafeMetadata?.gstNumber as string) ||
+    localStorage.getItem('clinicpulse_clinic_gst') ||
+    '33ABCDE1234F1Z5';
   
   const invoice = useMemo(() => {
     if (selectedInvoiceId) {
@@ -28,7 +43,7 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
       colors: ['#00A896', '#0D9488', '#0F4C81']
     });
 
-    const text = `*ClinicPulse Pro - Medical Tax Invoice* %0A%0AHello *${invoice.patient.name}*,%0AThank you for your visit today.%0A%0A*Invoice ID:* ${invoice.id}%0A*Doctor:* ${doctor?.name}%0A*Total Amount:* ₹${invoice.totalAmount.toFixed(2)}%0A%0A*Medicines Prescribed:*%0A${invoice.prescriptionItems.map(p => `- ${p.medicineName} (${p.dosage}) for ${p.durationDays} days`).join('%0A')}%0A%0A*Payment Link:* https://pay.clinicpulse.demo/${invoice.id}%0A%0ARecovery well!`;
+    const text = `*${hospitalName} - Medical Tax Invoice* %0A%0AHello *${invoice.patient.name}*,%0AThank you for your visit today.%0A%0A*Invoice ID:* ${invoice.id}%0A*Doctor:* ${doctor?.name}%0A*GSTIN:* ${hospitalGst}%0A*Total Amount:* ₹${invoice.totalAmount.toFixed(2)}%0A%0A*Medicines Prescribed:*%0A${invoice.prescriptionItems.map(p => `- ${p.medicineName} (${p.dosage}) for ${p.durationDays} days`).join('%0A')}%0A%0A*Payment Link:* https://pay.clinicpulse.demo/${invoice.id}%0A%0ARecover well!`;
     
     window.open(`https://wa.me/91${invoice.patient.phone}?text=${text}`, '_blank');
   };
@@ -45,9 +60,9 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
           {/* Header */}
           <div className="flex justify-between items-start border-b border-slate-200 pb-6 mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-navy-900">CLINICPULSE PRO CLINIC</h1>
-              <p className="text-sm text-slate-500 mt-1">123 Health Avenue, Chennai, TN - 600001</p>
-              <p className="text-sm text-slate-500">GSTIN: 33ABCDE1234F1Z5</p>
+              <h1 className="text-2xl font-bold text-navy-900 uppercase tracking-tight">{hospitalName}</h1>
+              <p className="text-sm text-slate-500 mt-1 max-w-md">{hospitalAddress}</p>
+              <p className="text-sm font-semibold text-slate-600 mt-0.5">GSTIN: <span className="font-mono text-navy-900 font-bold">{hospitalGst}</span></p>
             </div>
             <div className="text-right">
               <h2 className="text-xl font-bold text-teal-700">TAX INVOICE</h2>
