@@ -5,13 +5,15 @@ import { Footer } from './components/Footer';
 import { LandingPage } from './components/LandingPage';
 import { Simulator } from './components/simulator/Simulator';
 import { ProfileModal } from './components/ProfileModal';
+import { DataImportWizard } from './components/DataImportWizard';
 import { AppStateProvider } from './context/AppStateContext';
-import { Building2, UserCircle2, Calendar, ShieldCheck } from 'lucide-react';
+import { Building2, UserCircle2, Calendar, ShieldCheck, FileSpreadsheet } from 'lucide-react';
 
 const AppContent = () => {
   const { isSignedIn, user, isLoaded } = useUser();
   const [showAdmin, setShowAdmin] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showImportWizard, setShowImportWizard] = useState(false);
   const [showLandingPage, setShowLandingPage] = useState(false);
 
   // Fallback while Clerk auth state is initializing
@@ -84,12 +86,21 @@ const AppContent = () => {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    onClick={() => setShowImportWizard(true)}
+                    className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all backdrop-blur-sm flex items-center gap-2 shadow-sm"
+                  >
+                    <FileSpreadsheet className="h-4 w-4 text-emerald-400" />
+                    <span>Import Excel / CSV Data</span>
+                  </button>
+
                   <button
                     onClick={() => setShowProfileModal(true)}
-                    className="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all backdrop-blur-sm"
+                    className="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all backdrop-blur-sm flex items-center gap-2"
                   >
-                    Edit Profile Details
+                    <UserCircle2 className="h-4 w-4 text-teal-400" />
+                    <span>Edit Profile Details</span>
                   </button>
                 </div>
               </div>
@@ -113,6 +124,12 @@ const AppContent = () => {
       <ProfileModal
         isOpen={showProfileModal}
         onClose={() => setShowProfileModal(false)}
+      />
+
+      {/* Excel / CSV Onboarding Wizard */}
+      <DataImportWizard
+        isOpen={showImportWizard}
+        onClose={() => setShowImportWizard(false)}
       />
     </div>
   );

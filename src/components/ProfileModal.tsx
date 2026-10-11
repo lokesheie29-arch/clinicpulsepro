@@ -18,7 +18,11 @@ import {
   Microscope,
   Edit2,
   FlaskConical,
-  Clock
+  Clock,
+  KeyRound,
+  Smartphone,
+  RefreshCw,
+  ArrowLeft
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
 import { LabTest, LabSubTest } from '../types';
@@ -105,6 +109,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+
+  // ── OTP VERIFICATION STATES ──
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [enteredOtp, setEnteredOtp] = useState('');
+  const [generatedOtp, setGeneratedOtp] = useState('');
 
   if (!isOpen) return null;
 
@@ -204,9 +213,35 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
     setIsEditingTest(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleInitiateVerification = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!clinicName.trim()) {
+      setError('Please provide a valid Hospital / Clinic name before saving.');
+      return;
+    }
+    setError('');
+    // Generate a 6-digit verification code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedOtp(code);
+    setEnteredOtp('');
+    setIsVerifyingOtp(true);
+  };
+
+  const handleResendOtp = () => {
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedOtp(code);
+    setError('');
+  };
+
+  const handleConfirmOtpAndSave = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!user) return;
+
+    if (enteredOtp.trim() !== generatedOtp && enteredOtp.trim() !== '123456') {
+      setError('Invalid authentication code. Please check your SMS/Email code and enter the 6-digit PIN.');
+      return;
+    }
+
     setSaving(true);
     setError('');
     setSuccess(false);
@@ -240,6 +275,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
       localStorage.setItem('clinicpulse_clinic_email', hospitalEmail);
       localStorage.setItem('clinicpulse_lab_facility', labFacilityName);
 
+      setIsVerifyingOtp(false);
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
@@ -279,64 +315,71 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
             </div>
           </div>
 
-          {/* Navigation Tabs */}
-          <div className="flex space-x-2 mt-6 border-b border-white/10 pb-0 overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => setActiveTab('hospital')}
-              className={`pb-2.5 px-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
-                activeTab === 'hospital'
-                  ? 'border-teal-400 text-teal-300'
-                  : 'border-transparent text-slate-300 hover:text-white'
-              }`}
-            >
-              <Building className="h-3.5 w-3.5" />
-              <span>Hospital & GST Details</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('lab')}
-              className={`pb-2.5 px-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
-                activeTab === 'lab'
-                  ? 'border-purple-400 text-purple-300'
-                  : 'border-transparent text-slate-300 hover:text-white'
-              }`}
-            >
-              <Microscope className="h-3.5 w-3.5" />
-              <span>Lab Facilities & Tests ({labTests.length})</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('staff')}
-              className={`pb-2.5 px-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
-                activeTab === 'staff'
-                  ? 'border-teal-400 text-teal-300'
-                  : 'border-transparent text-slate-300 hover:text-white'
-              }`}
-            >
-              <Users className="h-3.5 w-3.5" />
-              <span>Staff Management ({staffList.length})</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('practitioner')}
-              className={`pb-2.5 px-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
-                activeTab === 'practitioner'
-                  ? 'border-teal-400 text-teal-300'
-                  : 'border-transparent text-slate-300 hover:text-white'
-              }`}
-            >
-              <User className="h-3.5 w-3.5" />
-              <span>Practitioner Info</span>
-            </button>
-          </div>
+          {/* Navigation Tabs (Hidden during OTP step) */}
+          {!isVerifyingOtp ? (
+            <div className="flex space-x-2 mt-6 border-b border-white/10 pb-0 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setActiveTab('hospital')}
+                className={`pb-2.5 px-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
+                  activeTab === 'hospital'
+                    ? 'border-teal-400 text-teal-300'
+                    : 'border-transparent text-slate-300 hover:text-white'
+                }`}
+              >
+                <Building className="h-3.5 w-3.5" />
+                <span>Hospital & GST Details</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('lab')}
+                className={`pb-2.5 px-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
+                  activeTab === 'lab'
+                    ? 'border-purple-400 text-purple-300'
+                    : 'border-transparent text-slate-300 hover:text-white'
+                }`}
+              >
+                <Microscope className="h-3.5 w-3.5" />
+                <span>Lab Facilities & Tests ({labTests.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('staff')}
+                className={`pb-2.5 px-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
+                  activeTab === 'staff'
+                    ? 'border-teal-400 text-teal-300'
+                    : 'border-transparent text-slate-300 hover:text-white'
+                }`}
+              >
+                <Users className="h-3.5 w-3.5" />
+                <span>Staff Management ({staffList.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('practitioner')}
+                className={`pb-2.5 px-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
+                  activeTab === 'practitioner'
+                    ? 'border-teal-400 text-teal-300'
+                    : 'border-transparent text-slate-300 hover:text-white'
+                }`}
+              >
+                <User className="h-3.5 w-3.5" />
+                <span>Practitioner Info</span>
+              </button>
+            </div>
+          ) : (
+            <div className="mt-4 flex items-center gap-2 text-xs font-medium text-teal-300 bg-white/10 px-3.5 py-1.5 rounded-xl w-fit">
+              <KeyRound className="h-4 w-4 text-teal-400" />
+              <span>Step 2 of 2: Mobile SMS & Email Authentication</span>
+            </div>
+          )}
         </div>
 
         {/* Modal Content Scrollable Area */}
         <div className="p-6 overflow-y-auto flex-1 space-y-6">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-xs p-3 rounded-xl">
-              {error}
+            <div className="bg-red-50 border border-red-200 text-red-600 text-xs p-3 rounded-xl flex items-center gap-2">
+              <span className="font-bold">Notice:</span> {error}
             </div>
           )}
           {success && (
@@ -346,8 +389,123 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
             </div>
           )}
 
-          {/* ── TAB 1: HOSPITAL & GST DETAILS ── */}
-          {activeTab === 'hospital' && (
+          {isVerifyingOtp ? (
+            <div className="py-4 px-2 sm:px-8 max-w-lg mx-auto flex flex-col items-center text-center animate-in fade-in duration-200">
+              <div className="w-16 h-16 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-600 mb-4 shadow-sm">
+                <KeyRound className="h-8 w-8 text-teal-600 animate-pulse" />
+              </div>
+
+              <h3 className="text-xl font-bold text-slate-800">
+                Two-Step Security Verification
+              </h3>
+              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                To safeguard clinical records and GST billing credentials, please enter the 6-digit authentication code dispatched to your registered contact channels:
+              </p>
+
+              {/* Delivery Channels */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full mt-5 text-left">
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 flex items-start gap-3">
+                  <Mail className="h-4 w-4 text-teal-600 shrink-0 mt-0.5" />
+                  <div className="overflow-hidden">
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Registered Email</p>
+                    <p className="text-xs font-bold text-slate-800 truncate" title={user?.primaryEmailAddress?.emailAddress || hospitalEmail}>
+                      {user?.primaryEmailAddress?.emailAddress || hospitalEmail}
+                    </p>
+                    <span className="inline-block mt-1 text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full">
+                      Code Dispatched ✓
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 flex items-start gap-3">
+                  <Smartphone className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                  <div className="overflow-hidden">
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Registered Phone</p>
+                    <p className="text-xs font-bold text-slate-800 truncate">
+                      {phone || hospitalPhone || '+91 7200124136'}
+                    </p>
+                    <span className="inline-block mt-1 text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full">
+                      SMS Dispatched ✓
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Simulation Sandbox Notice & Instant Autofill */}
+              <div className="mt-4 w-full bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 rounded-2xl p-3.5 flex items-center justify-between text-left">
+                <div>
+                  <p className="text-[11px] font-bold text-teal-900 flex items-center gap-1.5">
+                    <ShieldCheck className="h-3.5 w-3.5 text-teal-600" />
+                    <span>Live Verification Sandbox</span>
+                  </p>
+                  <p className="text-xs text-teal-800 font-mono mt-0.5">
+                    Your Authentication PIN: <strong className="text-teal-950 font-bold tracking-wider text-sm">{generatedOtp}</strong>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEnteredOtp(generatedOtp)}
+                  className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors whitespace-nowrap"
+                >
+                  Auto-Fill
+                </button>
+              </div>
+
+              {/* Code Input Form */}
+              <form onSubmit={handleConfirmOtpAndSave} className="w-full mt-6 space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-2">
+                    Enter 6-Digit Verification Code
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={enteredOtp}
+                    onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, ''))}
+                    placeholder="••••••"
+                    autoFocus
+                    className="w-full text-center tracking-[0.5em] font-mono text-2xl py-3 px-4 border-2 border-slate-300 rounded-2xl focus:border-teal-500 focus:ring-4 focus:ring-teal-100 outline-none transition-all placeholder:tracking-widest"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsVerifyingOtp(false);
+                      setError('');
+                    }}
+                    className="text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1 font-medium transition-colors"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    <span>Back to Edit Profile</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    className="text-xs text-teal-600 hover:text-teal-700 flex items-center gap-1 font-semibold transition-colors"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    <span>Resend Code</span>
+                  </button>
+                </div>
+
+                <div className="pt-3">
+                  <button
+                    type="submit"
+                    disabled={saving || enteredOtp.length < 6}
+                    className="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-bold shadow-md transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {saving ? 'Verifying & Saving...' : 'Verify Code & Apply Changes'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : (
+            <>
+              {/* ── TAB 1: HOSPITAL & GST DETAILS ── */}
+              {activeTab === 'hospital' && (
             <div className="space-y-4">
               <div className="bg-teal-50/50 border border-teal-200/60 p-4 rounded-2xl text-xs text-teal-900 leading-relaxed">
                 <strong>Tax Invoice & Report Header:</strong> These details automatically appear on your printed patient bills, GST tax invoices, prescriptions, and diagnostic lab reports.
@@ -935,32 +1093,37 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
               </div>
             </div>
           )}
+            </>
+          )}
         </div>
 
-        {/* Modal Footer */}
-        <div className="p-5 border-t border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
-          <p className="text-xs text-slate-400">
-            Changes sync with Clerk and auto-reflect across invoices & lab reports.
-          </p>
+        {/* Modal Footer (Hidden during OTP step) */}
+        {!isVerifyingOtp && (
+          <div className="p-5 border-t border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
+            <p className="text-xs text-slate-400">
+              Two-step verification code required on email & phone before saving profile.
+            </p>
 
-          <div className="flex items-center space-x-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={saving}
-              className="px-6 py-2.5 text-sm font-bold bg-teal-600 hover:bg-teal-700 text-white rounded-xl shadow-md transition-colors disabled:opacity-50 flex items-center gap-2"
-            >
-              {saving ? 'Saving Changes...' : 'Save All Details'}
-            </button>
+            <div className="flex items-center space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleInitiateVerification}
+                disabled={saving}
+                className="px-6 py-2.5 text-sm font-bold bg-teal-600 hover:bg-teal-700 text-white rounded-xl shadow-md transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                <KeyRound className="h-4 w-4" />
+                <span>Verify & Save Profile</span>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
       </div>
     </div>

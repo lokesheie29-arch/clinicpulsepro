@@ -17,6 +17,8 @@ interface AppStateContextType {
   addLabTest: (test: LabTest) => void;
   updateLabTest: (id: string, test: LabTest) => void;
   deleteLabTest: (id: string) => void;
+  bulkAddMedicines: (newMeds: Medicine[]) => void;
+  bulkAddInvoices: (newInvs: Invoice[]) => void;
   resetDemoData: () => void;
 }
 
@@ -239,6 +241,44 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }));
   };
 
+  const bulkAddMedicines = (newMeds: Medicine[]) => {
+    setMedicines(prev => [...newMeds, ...prev]);
+    supabase.from('medicines').insert(newMeds.map(med => ({
+      id: med.id,
+      generic_name: med.genericName,
+      brand_name: med.brandName,
+      batch_no: med.batchNo,
+      hsn: med.hsn,
+      cost_price: med.costPrice,
+      selling_price: med.sellingPrice,
+      gst_rate: med.gstRate,
+      stock: med.stock,
+      expiry_date: med.expiryDate,
+      category: med.category
+    }))).then();
+  };
+
+  const bulkAddInvoices = (newInvs: Invoice[]) => {
+    setInvoices(prev => [...newInvs, ...prev]);
+    supabase.from('invoices').insert(newInvs.map(invoice => ({
+      id: invoice.id,
+      patient_name: invoice.patient.name,
+      patient_phone: invoice.patient.phone,
+      patient_age: invoice.patient.age,
+      patient_gender: invoice.patient.gender,
+      doctor_id: invoice.doctorId,
+      consultation_fee: invoice.consultationFee,
+      prescription_items: invoice.prescriptionItems,
+      lab_items: invoice.labItems || [],
+      sub_total: invoice.subTotal,
+      cgst: invoice.cgst,
+      sgst: invoice.sgst,
+      total_amount: invoice.totalAmount,
+      payment_status: invoice.paymentStatus,
+      created_at: invoice.date
+    }))).then();
+  };
+
   const resetDemoData = () => {
     setMedicines(initialMedicines);
     setInvoices(initialInvoices);
@@ -254,7 +294,8 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     <AppStateContext.Provider value={{
       medicines, invoices, labTests, labReports,
       addInvoice, updateMedicineStock, addMedicine, restockMedicine,
-      addLabReport, updateLabReport, addLabTest, updateLabTest, deleteLabTest, resetDemoData
+      addLabReport, updateLabReport, addLabTest, updateLabTest, deleteLabTest,
+      bulkAddMedicines, bulkAddInvoices, resetDemoData
     }}>
       {children}
     </AppStateContext.Provider>
