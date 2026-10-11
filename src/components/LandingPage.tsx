@@ -1,7 +1,24 @@
 import React from 'react';
-import { ShieldCheck, Zap, Database, Users, MessageCircle, FileText, CheckCircle, ChevronDown } from 'lucide-react';
+import {
+  ShieldCheck,
+  Zap,
+  Database,
+  Users,
+  MessageCircle,
+  FileText,
+  CheckCircle,
+  ChevronDown,
+  Building2,
+  Microscope,
+  Pill,
+  ArrowRight
+} from 'lucide-react';
+import { SignUpButton } from '@clerk/react';
+import { useAppState } from '../context/AppStateContext';
 
 export const LandingPage = () => {
+  const { orgType, setOrgType } = useAppState();
+
   return (
     <div className="print:hidden">
       {/* Hero Section */}
@@ -44,6 +61,164 @@ export const LandingPage = () => {
             <div className="text-center">
               <div className="text-3xl font-bold text-teal-400">100%</div>
               <div className="text-sm text-slate-400 mt-1">FEFO Accuracy</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── ORGANIZATION TYPE SELECTION SECTION ── */}
+      <section className="relative -mt-16 z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
+        <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 p-6 sm:p-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-100">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 text-teal-700 text-xs font-bold mb-2 border border-teal-200">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                <span>Tailored ERP Architecture</span>
+              </div>
+              <h2 className="text-2xl font-bold text-navy-900">
+                Choose Your Organization Type for Registration
+              </h2>
+              <p className="text-slate-600 text-xs sm:text-sm mt-0.5">
+                Select your establishment model to instantly personalize modules, billing structures, and reporting workflows.
+              </p>
+            </div>
+            
+            <div className="text-right hidden md:block">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Currently Tailored For</span>
+              <span className="text-sm font-bold text-teal-700">
+                {orgType === 'hospital' ? 'Multispecialty Hospital' : orgType === 'laboratory' ? 'Testing Laboratory' : 'Medical Store / Pharmacy'}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {/* 1. Hospital Card */}
+            <div
+              onClick={() => {
+                setOrgType('hospital');
+                localStorage.setItem('clinicpulse_org_type', 'hospital');
+                localStorage.setItem('clinicpulse_org_type_selected', 'true');
+              }}
+              className={`p-6 rounded-2xl border-2 transition-all cursor-pointer relative flex flex-col justify-between ${
+                orgType === 'hospital'
+                  ? 'border-teal-500 bg-teal-50/30 ring-2 ring-teal-500/20 shadow-md'
+                  : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/50'
+              }`}
+            >
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center shadow-xs">
+                    <Building2 className="h-6 w-6" />
+                  </div>
+                  <span className="text-[11px] font-bold text-teal-700 bg-teal-50 border border-teal-200 px-2.5 py-0.5 rounded-full">
+                    Complete ERP
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold text-navy-900 mb-2">Hospital / Multispecialty Hospital</h3>
+                <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                  For hospitals, multispecialty hospitals, clinics, and healthcare facilities.
+                </p>
+                <div className="space-y-1.5 mb-6 text-xs text-slate-600">
+                  <div className="flex items-center gap-1.5"><CheckCircle className="h-3.5 w-3.5 text-teal-600" /><span>OPD Doctor Studio & Prescriptions</span></div>
+                  <div className="flex items-center gap-1.5"><CheckCircle className="h-3.5 w-3.5 text-teal-600" /><span>Full Pathology & Lab Diagnostics</span></div>
+                  <div className="flex items-center gap-1.5"><CheckCircle className="h-3.5 w-3.5 text-teal-600" /><span>FEFO Pharmacy & WhatsApp Bills</span></div>
+                </div>
+              </div>
+              <SignUpButton mode="modal">
+                <button
+                  type="button"
+                  className="w-full py-2.5 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5"
+                >
+                  <span>Register as Hospital</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </SignUpButton>
+            </div>
+
+            {/* 2. Testing Laboratory */}
+            <div
+              onClick={() => {
+                setOrgType('laboratory');
+                localStorage.setItem('clinicpulse_org_type', 'laboratory');
+                localStorage.setItem('clinicpulse_org_type_selected', 'true');
+              }}
+              className={`p-6 rounded-2xl border-2 transition-all cursor-pointer relative flex flex-col justify-between ${
+                orgType === 'laboratory'
+                  ? 'border-purple-500 bg-purple-50/30 ring-2 ring-purple-500/20 shadow-md'
+                  : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/50'
+              }`}
+            >
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center shadow-xs">
+                    <Microscope className="h-6 w-6" />
+                  </div>
+                  <span className="text-[11px] font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-0.5 rounded-full">
+                    Pathology & Diagnostics
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold text-navy-900 mb-2">Testing Laboratory</h3>
+                <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                  For medical diagnostic laboratories, pathology labs, and clinical testing facilities.
+                </p>
+                <div className="space-y-1.5 mb-6 text-xs text-slate-600">
+                  <div className="flex items-center gap-1.5"><CheckCircle className="h-3.5 w-3.5 text-purple-600" /><span>Test Catalog & Sub-Test Limits</span></div>
+                  <div className="flex items-center gap-1.5"><CheckCircle className="h-3.5 w-3.5 text-purple-600" /><span>Sample Tracking & Investigation Results</span></div>
+                  <div className="flex items-center gap-1.5"><CheckCircle className="h-3.5 w-3.5 text-purple-600" /><span>Lab WhatsApp Reports & Billing</span></div>
+                </div>
+              </div>
+              <SignUpButton mode="modal">
+                <button
+                  type="button"
+                  className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5"
+                >
+                  <span>Register as Diagnostic Lab</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </SignUpButton>
+            </div>
+
+            {/* 3. Medical Store / Pharmacy */}
+            <div
+              onClick={() => {
+                setOrgType('pharmacy');
+                localStorage.setItem('clinicpulse_org_type', 'pharmacy');
+                localStorage.setItem('clinicpulse_org_type_selected', 'true');
+              }}
+              className={`p-6 rounded-2xl border-2 transition-all cursor-pointer relative flex flex-col justify-between ${
+                orgType === 'pharmacy'
+                  ? 'border-amber-500 bg-amber-50/30 ring-2 ring-amber-500/20 shadow-md'
+                  : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/50'
+              }`}
+            >
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center shadow-xs">
+                    <Pill className="h-6 w-6" />
+                  </div>
+                  <span className="text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                    Retail Dispensary & POS
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold text-navy-900 mb-2">Medical Store / Pharmacy</h3>
+                <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                  For retail medical shops, pharmacies, chemist shops, and medicine dispensaries.
+                </p>
+                <div className="space-y-1.5 mb-6 text-xs text-slate-600">
+                  <div className="flex items-center gap-1.5"><CheckCircle className="h-3.5 w-3.5 text-amber-600" /><span>FEFO Batch Tracking & Expiry Alerts</span></div>
+                  <div className="flex items-center gap-1.5"><CheckCircle className="h-3.5 w-3.5 text-amber-600" /><span>GST Tax Invoices & WhatsApp Delivery</span></div>
+                  <div className="flex items-center gap-1.5"><CheckCircle className="h-3.5 w-3.5 text-amber-600" /><span>Fast Counter POS & Margin Tracking</span></div>
+                </div>
+              </div>
+              <SignUpButton mode="modal">
+                <button
+                  type="button"
+                  className="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5"
+                >
+                  <span>Register as Pharmacy</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </SignUpButton>
             </div>
           </div>
         </div>

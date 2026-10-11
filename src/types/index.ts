@@ -99,3 +99,15 @@ export interface LabReport {
   date: string;
   status: 'Pending' | 'Completed';
 }
+
+export type OrgType = 'hospital' | 'laboratory' | 'pharmacy';
+
+export interface OrgTypeInfo {
+  id: OrgType;
+  title: string;
+  badge: string;
+  subtitle: string;
+  description: string;
+  defaultTab: string;
+  allowedTabs: string[];
+}

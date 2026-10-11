@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/react';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
@@ -6,15 +6,49 @@ import { LandingPage } from './components/LandingPage';
 import { Simulator } from './components/simulator/Simulator';
 import { ProfileModal } from './components/ProfileModal';
 import { DataImportWizard } from './components/DataImportWizard';
-import { AppStateProvider } from './context/AppStateContext';
-import { Building2, UserCircle2, Calendar, ShieldCheck, FileSpreadsheet } from 'lucide-react';
+import { OrgTypeSelectionModal } from './components/OrgTypeSelectionModal';
+import { AppStateProvider, useAppState } from './context/AppStateContext';
+import {
+  Building2,
+  UserCircle2,
+  Calendar,
+  ShieldCheck,
+  FileSpreadsheet,
+  Microscope,
+  Pill,
+  Sparkles
+} from 'lucide-react';
 
 const AppContent = () => {
   const { isSignedIn, user, isLoaded } = useUser();
+  const { orgType, setOrgType } = useAppState();
   const [showAdmin, setShowAdmin] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showImportWizard, setShowImportWizard] = useState(false);
+  const [showOrgTypeModal, setShowOrgTypeModal] = useState(false);
   const [showLandingPage, setShowLandingPage] = useState(false);
+
+  // Check if organization type selection is needed on initial registration/login
+  const hasSelectedOrgType = !!(
+    user?.unsafeMetadata?.orgType ||
+    localStorage.getItem('clinicpulse_org_type_selected')
+  );
+
+  useEffect(() => {
+    if (isSignedIn && !hasSelectedOrgType) {
+      setShowOrgTypeModal(true);
+    }
+  }, [isSignedIn, hasSelectedOrgType]);
+
+  // Sync orgType from Clerk metadata if present
+  useEffect(() => {
+    if (user?.unsafeMetadata?.orgType) {
+      const metaType = user.unsafeMetadata.orgType as any;
+      if (['hospital', 'laboratory', 'pharmacy'].includes(metaType) && metaType !== orgType) {
+        setOrgType(metaType);
+      }
+    }
+  }, [user?.unsafeMetadata?.orgType]);
 
   // Fallback while Clerk auth state is initializing
   if (!isLoaded) {
@@ -79,6 +113,25 @@ const AppContent = () => {
                       {clinicName}
                     </span>
                     <span>•</span>
+                    <span className="flex items-center gap-1.5 font-medium">
+                      {orgType === 'laboratory' ? (
+                        <>
+                          <Microscope className="h-4 w-4 text-purple-400" />
+                          <span className="text-purple-300">Testing Laboratory Mode</span>
+                        </>
+                      ) : orgType === 'pharmacy' ? (
+                        <>
+                          <Pill className="h-4 w-4 text-amber-400" />
+                          <span className="text-amber-300">Medical Store / Pharmacy Mode</span>
+                        </>
+                      ) : (
+                        <>
+                          <Building2 className="h-4 w-4 text-teal-400" />
+                          <span className="text-teal-300">Multispecialty Hospital Mode</span>
+                        </>
+                      )}
+                    </span>
+                    <span>•</span>
                     <span className="flex items-center gap-1.5 text-slate-400">
                       <Calendar className="h-4 w-4" />
                       {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
@@ -87,6 +140,14 @@ const AppContent = () => {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    onClick={() => setShowOrgTypeModal(true)}
+                    className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 border border-purple-500/40 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all backdrop-blur-sm flex items-center gap-2 shadow-sm"
+                  >
+                    <Sparkles className="h-4 w-4 text-purple-300" />
+                    <span>Facility Type: {orgType === 'laboratory' ? 'Lab' : orgType === 'pharmacy' ? 'Pharmacy' : 'Hospital'}</span>
+                  </button>
+
                   <button
                     onClick={() => setShowImportWizard(true)}
                     className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all backdrop-blur-sm flex items-center gap-2 shadow-sm"
@@ -130,6 +191,13 @@ const AppContent = () => {
       <DataImportWizard
         isOpen={showImportWizard}
         onClose={() => setShowImportWizard(false)}
+      />
+
+      {/* Organization Type Selection / Onboarding Modal */}
+      <OrgTypeSelectionModal
+        isOpen={showOrgTypeModal}
+        onClose={() => setShowOrgTypeModal(false)}
+        isOnboarding={isSignedIn && !hasSelectedOrgType}
       />
     </div>
   );

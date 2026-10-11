@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Medicine, Invoice, LabTest, LabReport } from '../types';
+import { Medicine, Invoice, LabTest, LabReport, OrgType } from '../types';
 import { initialMedicines, initialInvoices, initialLabTests, initialLabReports } from '../data/mockData';
 import { supabase } from '../lib/supabase';
 
@@ -8,6 +8,8 @@ interface AppStateContextType {
   invoices: Invoice[];
   labTests: LabTest[];
   labReports: LabReport[];
+  orgType: OrgType;
+  setOrgType: (type: OrgType) => void;
   addInvoice: (invoice: Invoice) => void;
   updateMedicineStock: (id: string, qtyToDeduct: number) => void;
   addMedicine: (med: Medicine) => void;
@@ -28,12 +30,17 @@ const MED_STORAGE_KEY = 'clinicpulse_demo_medicines_v4';
 const INV_STORAGE_KEY = 'clinicpulse_demo_invoices_v4';
 const LAB_TEST_STORAGE_KEY = 'clinicpulse_demo_labtests_v1';
 const LAB_REPORT_STORAGE_KEY = 'clinicpulse_demo_labreports_v1';
+const ORG_TYPE_STORAGE_KEY = 'clinicpulse_org_type';
 
 export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [labTests, setLabTests] = useState<LabTest[]>([]);
   const [labReports, setLabReports] = useState<LabReport[]>([]);
+  const [orgType, setOrgTypeState] = useState<OrgType>(() => {
+    const cached = localStorage.getItem(ORG_TYPE_STORAGE_KEY) as OrgType | null;
+    return (cached === 'hospital' || cached === 'laboratory' || cached === 'pharmacy') ? cached : 'hospital';
+  });
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -279,6 +286,11 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }))).then();
   };
 
+  const setOrgType = (type: OrgType) => {
+    setOrgTypeState(type);
+    localStorage.setItem(ORG_TYPE_STORAGE_KEY, type);
+  };
+
   const resetDemoData = () => {
     setMedicines(initialMedicines);
     setInvoices(initialInvoices);
@@ -293,6 +305,7 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   return (
     <AppStateContext.Provider value={{
       medicines, invoices, labTests, labReports,
+      orgType, setOrgType,
       addInvoice, updateMedicineStock, addMedicine, restockMedicine,
       addLabReport, updateLabReport, addLabTest, updateLabTest, deleteLabTest,
       bulkAddMedicines, bulkAddInvoices, resetDemoData

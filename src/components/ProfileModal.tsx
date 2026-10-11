@@ -22,10 +22,11 @@ import {
   KeyRound,
   Smartphone,
   RefreshCw,
-  ArrowLeft
+  ArrowLeft,
+  Pill
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
-import { LabTest, LabSubTest } from '../types';
+import { LabTest, LabSubTest, OrgType } from '../types';
 
 interface StaffMember {
   id: string;
@@ -44,9 +45,14 @@ interface ProfileModalProps {
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
   const { user } = useUser();
-  const { labTests, addLabTest, updateLabTest, deleteLabTest } = useAppState();
+  const { labTests, addLabTest, updateLabTest, deleteLabTest, orgType, setOrgType } = useAppState();
 
   const [activeTab, setActiveTab] = useState<'hospital' | 'practitioner' | 'staff' | 'lab'>('hospital');
+
+  // Organization Type Selection State
+  const [profileOrgType, setProfileOrgType] = useState<OrgType>(
+    (user?.unsafeMetadata?.orgType as OrgType) || orgType || 'hospital'
+  );
 
   // Practitioner Info
   const [firstName, setFirstName] = useState(user?.firstName || '');
@@ -263,7 +269,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
           labFacilityName,
           labNablLicense,
           labInCharge,
-          labWorkingHours
+          labWorkingHours,
+          orgType: profileOrgType
         }
       });
 
@@ -274,6 +281,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
       localStorage.setItem('clinicpulse_clinic_phone', hospitalPhone);
       localStorage.setItem('clinicpulse_clinic_email', hospitalEmail);
       localStorage.setItem('clinicpulse_lab_facility', labFacilityName);
+      localStorage.setItem('clinicpulse_org_type', profileOrgType);
+      localStorage.setItem('clinicpulse_org_type_selected', 'true');
+      setOrgType(profileOrgType);
 
       setIsVerifyingOtp(false);
       setSuccess(true);
@@ -509,6 +519,77 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
             <div className="space-y-4">
               <div className="bg-teal-50/50 border border-teal-200/60 p-4 rounded-2xl text-xs text-teal-900 leading-relaxed">
                 <strong>Tax Invoice & Report Header:</strong> These details automatically appear on your printed patient bills, GST tax invoices, prescriptions, and diagnostic lab reports.
+              </div>
+
+              {/* ── ORGANIZATION TYPE SELECTION FIELD ── */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Organization Type (Tailors ERP Modules)
+                  </label>
+                  <span className="text-[11px] font-semibold text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200">
+                    Active Mode: {profileOrgType === 'hospital' ? 'Multispecialty Hospital' : profileOrgType === 'laboratory' ? 'Testing Laboratory' : 'Medical Store / Pharmacy'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div
+                    onClick={() => setProfileOrgType('hospital')}
+                    className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all ${
+                      profileOrgType === 'hospital'
+                        ? 'border-teal-500 bg-teal-50/40 ring-2 ring-teal-500/20'
+                        : 'border-slate-200 hover:border-slate-300 bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
+                        <Building2 className="h-4 w-4" />
+                      </div>
+                      <span className="text-xs font-bold text-slate-900 leading-tight">Hospital / Multispecialty</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      For hospitals, multispecialty hospitals, clinics, and healthcare facilities.
+                    </p>
+                  </div>
+
+                  <div
+                    onClick={() => setProfileOrgType('laboratory')}
+                    className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all ${
+                      profileOrgType === 'laboratory'
+                        ? 'border-purple-500 bg-purple-50/40 ring-2 ring-purple-500/20'
+                        : 'border-slate-200 hover:border-slate-300 bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+                        <Microscope className="h-4 w-4" />
+                      </div>
+                      <span className="text-xs font-bold text-slate-900 leading-tight">Testing Laboratory</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      For medical diagnostic laboratories, pathology labs, and clinical testing facilities.
+                    </p>
+                  </div>
+
+                  <div
+                    onClick={() => setProfileOrgType('pharmacy')}
+                    className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all ${
+                      profileOrgType === 'pharmacy'
+                        ? 'border-amber-500 bg-amber-50/40 ring-2 ring-amber-500/20'
+                        : 'border-slate-200 hover:border-slate-300 bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                        <Pill className="h-4 w-4" />
+                      </div>
+                      <span className="text-xs font-bold text-slate-900 leading-tight">Medical Store / Pharmacy</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      For retail medical shops, pharmacies, chemist shops, and medicine dispensaries.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div>
