@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Medicine, Invoice, LabTest, LabReport } from '../types';
 import { initialMedicines, initialInvoices, initialLabTests, initialLabReports } from '../data/mockData';
+import { supabase } from '../lib/supabase';
 
 interface AppStateContextType {
   medicines: Medicine[];
@@ -31,24 +32,99 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const storedMeds = localStorage.getItem(MED_STORAGE_KEY);
-    const storedInvs = localStorage.getItem(INV_STORAGE_KEY);
-    const storedLabTests = localStorage.getItem(LAB_TEST_STORAGE_KEY);
-    const storedLabReports = localStorage.getItem(LAB_REPORT_STORAGE_KEY);
+    const loadData = async () => {
+      // 1. Load from local cache first for instant responsiveness
+      const storedMeds = localStorage.getItem(MED_STORAGE_KEY);
+      const storedInvs = localStorage.getItem(INV_STORAGE_KEY);
+      const storedLabTests = localStorage.getItem(LAB_TEST_STORAGE_KEY);
+      const storedLabReports = localStorage.getItem(LAB_REPORT_STORAGE_KEY);
 
-    if (storedMeds) setMedicines(JSON.parse(storedMeds));
-    else { setMedicines(initialMedicines); localStorage.setItem(MED_STORAGE_KEY, JSON.stringify(initialMedicines)); }
+      const localMeds = storedMeds ? JSON.parse(storedMeds) : initialMedicines;
+      const localInvs = storedInvs ? JSON.parse(storedInvs) : initialInvoices;
+      const localTests = storedLabTests ? JSON.parse(storedLabTests) : initialLabTests;
+      const localReports = storedLabReports ? JSON.parse(storedLabReports) : initialLabReports;
 
-    if (storedInvs) setInvoices(JSON.parse(storedInvs));
-    else { setInvoices(initialInvoices); localStorage.setItem(INV_STORAGE_KEY, JSON.stringify(initialInvoices)); }
+      setMedicines(localMeds);
+      setInvoices(localInvs);
+      setLabTests(localTests);
+      setLabReports(localReports);
 
-    if (storedLabTests) setLabTests(JSON.parse(storedLabTests));
-    else { setLabTests(initialLabTests); localStorage.setItem(LAB_TEST_STORAGE_KEY, JSON.stringify(initialLabTests)); }
+      // 2. Fetch and merge latest data from Supabase in the background
+      try {
+        const { data: supaInvoices } = await supabase
+          .from('invoices')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-    if (storedLabReports) setLabReports(JSON.parse(storedLabReports));
-    else { setLabReports(initialLabReports); localStorage.setItem(LAB_REPORT_STORAGE_KEY, JSON.stringify(initialLabReports)); }
-    
-    setIsLoaded(true);
+        if (supaInvoices && supaInvoices.length > 0) {
+          const mappedInvoices: Invoice[] = supaInvoices.map(row => ({
+            id: row.id,
+            patient: {
+              name: row.patient_name,
+              phone: row.patient_phone || '',
+              age: row.patient_age || 0,
+              gender: row.patient_gender || 'Male',
+              complaints: '',
+              bp: '',
+              pulse: '',
+              temp: '',
+              spo2: '',
+              weight: ''
+            },
+            doctorId: row.doctor_id || 'doc-1',
+            consultationFee: Number(row.consultation_fee || 0),
+            prescriptionItems: row.prescription_items || [],
+            labItems: row.lab_items || [],
+            subTotal: Number(row.sub_total || 0),
+            cgst: Number(row.cgst || 0),
+            sgst: Number(row.sgst || 0),
+            totalAmount: Number(row.total_amount || 0),
+            date: row.created_at,
+            paymentStatus: row.payment_status || 'Pending'
+          }));
+          setInvoices(mappedInvoices);
+        }
+
+        const { data: supaReports } = await supabase
+          .from('lab_reports')
+          .select('*')
+          .order('date', { ascending: false });
+
+        if (supaReports && supaReports.length > 0) {
+          setLabReports(supaReports.map(row => ({
+            id: row.id,
+            patient: row.patient,
+            doctorId: row.doctor_id,
+            tests: row.tests || [],
+            status: row.status,
+            date: row.date
+          })));
+        }
+
+        const { data: supaMedicines } = await supabase.from('medicines').select('*');
+        if (supaMedicines && supaMedicines.length > 0) {
+          setMedicines(supaMedicines.map(m => ({
+            id: m.id,
+            genericName: m.generic_name,
+            brandName: m.brand_name,
+            batchNo: m.batch_no,
+            hsn: m.hsn,
+            costPrice: Number(m.cost_price),
+            sellingPrice: Number(m.selling_price),
+            gstRate: Number(m.gst_rate),
+            stock: Number(m.stock),
+            expiryDate: m.expiry_date,
+            category: m.category
+          })));
+        }
+      } catch (err) {
+        console.warn('Supabase offline or empty, using cached clinic data:', err);
+      }
+
+      setIsLoaded(true);
+    };
+
+    loadData();
   }, []);
 
   useEffect(() => {
@@ -60,24 +136,92 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [medicines, invoices, labTests, labReports, isLoaded]);
 
-  const addInvoice = (invoice: Invoice) => setInvoices(prev => [invoice, ...prev]);
-  const addMedicine = (med: Medicine) => setMedicines(prev => [...prev, med]);
-  const addLabReport = (report: LabReport) => setLabReports(prev => [report, ...prev]);
-
-  const updateMedicineStock = (id: string, qtyToDeduct: number) => {
-    setMedicines(prev => prev.map(med => 
-      med.id === id ? { ...med, stock: Math.max(0, med.stock - qtyToDeduct) } : med
-    ));
+  const addInvoice = (invoice: Invoice) => {
+    setInvoices(prev => [invoice, ...prev]);
+    supabase.from('invoices').insert({
+      id: invoice.id,
+      patient_name: invoice.patient.name,
+      patient_phone: invoice.patient.phone,
+      patient_age: invoice.patient.age,
+      patient_gender: invoice.patient.gender,
+      doctor_id: invoice.doctorId,
+      consultation_fee: invoice.consultationFee,
+      prescription_items: invoice.prescriptionItems,
+      lab_items: invoice.labItems || [],
+      sub_total: invoice.subTotal,
+      cgst: invoice.cgst,
+      sgst: invoice.sgst,
+      total_amount: invoice.totalAmount,
+      payment_status: invoice.paymentStatus,
+      created_at: invoice.date
+    }).then(({ error }) => {
+      if (error) console.error('Failed to sync invoice to Supabase:', error.message);
+    });
   };
 
-  const restockMedicine = (id: string, qtyToAdd: number) => {
-    setMedicines(prev => prev.map(med => 
-      med.id === id ? { ...med, stock: med.stock + qtyToAdd } : med
-    ));
+  const addMedicine = (med: Medicine) => {
+    setMedicines(prev => [...prev, med]);
+    supabase.from('medicines').insert({
+      id: med.id,
+      generic_name: med.genericName,
+      brand_name: med.brandName,
+      batch_no: med.batchNo,
+      hsn: med.hsn,
+      cost_price: med.costPrice,
+      selling_price: med.sellingPrice,
+      gst_rate: med.gstRate,
+      stock: med.stock,
+      expiry_date: med.expiryDate,
+      category: med.category
+    }).then(({ error }) => {
+      if (error) console.error('Failed to sync medicine to Supabase:', error.message);
+    });
+  };
+
+  const addLabReport = (report: LabReport) => {
+    setLabReports(prev => [report, ...prev]);
+    supabase.from('lab_reports').insert({
+      id: report.id,
+      patient: report.patient,
+      doctor_id: report.doctorId,
+      tests: report.tests,
+      status: report.status,
+      date: report.date
+    }).then(({ error }) => {
+      if (error) console.error('Failed to sync lab report to Supabase:', error.message);
+    });
   };
 
   const updateLabReport = (reportId: string, updatedReport: LabReport) => {
     setLabReports(prev => prev.map(rep => rep.id === reportId ? updatedReport : rep));
+    supabase.from('lab_reports').update({
+      tests: updatedReport.tests,
+      status: updatedReport.status
+    }).eq('id', reportId).then(({ error }) => {
+      if (error) console.error('Failed to update lab report in Supabase:', error.message);
+    });
+  };
+
+  const updateMedicineStock = (id: string, qtyToDeduct: number) => {
+    setMedicines(prev => prev.map(med => {
+      if (med.id === id) {
+        const newStock = Math.max(0, med.stock - qtyToDeduct);
+        supabase.from('medicines').update({ stock: newStock }).eq('id', id).then();
+        return { ...med, stock: newStock };
+      }
+      return med;
+    }));
+  };
+
+  const restockMedicine = (id: string, qtyToAdd: number) => {
+    setMedicines(prev => prev.map(med => {
+      if (med.id === id) {
+        const newStock = med.stock + qtyToAdd;
+        supabase.from('medicines').update({ stock: newStock }).eq('id', id).then();
+        return { ...med, stock: newStock };
+      }
+      return med;
+    }));
   };
 
   const resetDemoData = () => {
