@@ -21,6 +21,14 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
     (user?.unsafeMetadata?.gstNumber as string) ||
     localStorage.getItem('clinicpulse_clinic_gst') ||
     '33ABCDE1234F1Z5';
+  const hospitalPhone =
+    (user?.unsafeMetadata?.hospitalPhone as string) ||
+    localStorage.getItem('clinicpulse_clinic_phone') ||
+    '+91 7200124136';
+  const hospitalEmail =
+    (user?.unsafeMetadata?.hospitalEmail as string) ||
+    localStorage.getItem('clinicpulse_clinic_email') ||
+    'contact@clinicpulsepro.com';
   
   const invoice = useMemo(() => {
     if (selectedInvoiceId) {
@@ -43,7 +51,7 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
       colors: ['#00A896', '#0D9488', '#0F4C81']
     });
 
-    const text = `*${hospitalName} - Medical Tax Invoice* %0A%0AHello *${invoice.patient.name}*,%0AThank you for your visit today.%0A%0A*Invoice ID:* ${invoice.id}%0A*Doctor:* ${doctor?.name}%0A*GSTIN:* ${hospitalGst}%0A*Total Amount:* ₹${invoice.totalAmount.toFixed(2)}%0A%0A*Medicines Prescribed:*%0A${invoice.prescriptionItems.map(p => `- ${p.medicineName} (${p.dosage}) for ${p.durationDays} days`).join('%0A')}%0A%0A*Payment Link:* https://pay.clinicpulse.demo/${invoice.id}%0A%0ARecover well!`;
+    const text = `*${hospitalName} - Medical Tax Invoice* %0A%0AHello *${invoice.patient.name}*,%0AThank you for your visit today.%0A%0A*Invoice ID:* ${invoice.id}%0A*Doctor:* ${doctor?.name}%0A*Helpline:* ${hospitalPhone}%0A*Email:* ${hospitalEmail}%0A*GSTIN:* ${hospitalGst}%0A*Total Amount:* ₹${invoice.totalAmount.toFixed(2)}%0A%0A*Medicines Prescribed:*%0A${invoice.prescriptionItems.map(p => `- ${p.medicineName} (${p.dosage}) for ${p.durationDays} days`).join('%0A')}%0A%0A*Payment Link:* https://pay.clinicpulse.demo/${invoice.id}%0A%0ARecover well!`;
     
     window.open(`https://wa.me/91${invoice.patient.phone}?text=${text}`, '_blank');
   };
@@ -62,7 +70,10 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
             <div>
               <h1 className="text-2xl font-bold text-navy-900 uppercase tracking-tight">{hospitalName}</h1>
               <p className="text-sm text-slate-500 mt-1 max-w-md">{hospitalAddress}</p>
-              <p className="text-sm font-semibold text-slate-600 mt-0.5">GSTIN: <span className="font-mono text-navy-900 font-bold">{hospitalGst}</span></p>
+              <div className="mt-2 text-xs text-slate-600 space-y-0.5">
+                <p><span className="font-semibold text-slate-700">Contact No:</span> {hospitalPhone} &nbsp;|&nbsp; <span className="font-semibold text-slate-700">Email:</span> {hospitalEmail}</p>
+                <p><span className="font-semibold text-slate-700">GSTIN:</span> <span className="font-mono text-navy-900 font-bold">{hospitalGst}</span></p>
+              </div>
             </div>
             <div className="text-right">
               <h2 className="text-xl font-bold text-teal-700">TAX INVOICE</h2>
