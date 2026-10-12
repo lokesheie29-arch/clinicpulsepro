@@ -1,6 +1,11 @@
 import { Activity, Mail, Phone, MapPin } from 'lucide-react';
+import { LegalTab } from './LegalModal';
 
-export const Footer = () => {
+interface FooterProps {
+  onOpenLegal?: (tab: LegalTab) => void;
+}
+
+export const Footer = ({ onOpenLegal }: FooterProps) => {
   return (
     <footer className="print:hidden bg-navy-900 text-slate-300 py-12 border-t border-navy-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -31,10 +36,42 @@ export const Footer = () => {
           <div>
             <h3 className="font-semibold text-white mb-4">Legal & Compliance</h3>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Terms of Service</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">GST Compliance</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Drug License Guide</a></li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => onOpenLegal ? onOpenLegal('privacy') : (window.location.hash = '#privacy')}
+                  className="hover:text-teal-400 transition-colors text-left"
+                >
+                  Privacy Policy
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => onOpenLegal ? onOpenLegal('terms') : (window.location.hash = '#terms')}
+                  className="hover:text-teal-400 transition-colors text-left"
+                >
+                  Terms of Service
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => onOpenLegal ? onOpenLegal('gst') : (window.location.hash = '#gst')}
+                  className="hover:text-teal-400 transition-colors text-left"
+                >
+                  GST Compliance
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => onOpenLegal ? onOpenLegal('drug-license') : (window.location.hash = '#drug-license')}
+                  className="hover:text-teal-400 transition-colors text-left"
+                >
+                  Drug License Guide
+                </button>
+              </li>
             </ul>
           </div>
 

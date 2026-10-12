@@ -7,6 +7,7 @@ import { Simulator } from './components/simulator/Simulator';
 import { ProfileModal } from './components/ProfileModal';
 import { DataImportWizard } from './components/DataImportWizard';
 import { OrgTypeSelectionModal } from './components/OrgTypeSelectionModal';
+import { LegalModal, LegalTab } from './components/LegalModal';
 import { AppStateProvider, useAppState } from './context/AppStateContext';
 import {
   Building2,
@@ -27,6 +28,21 @@ const AppContent = () => {
   const [showImportWizard, setShowImportWizard] = useState(false);
   const [showOrgTypeModal, setShowOrgTypeModal] = useState(false);
   const [showLandingPage, setShowLandingPage] = useState(false);
+  const [legalModalTab, setLegalModalTab] = useState<LegalTab | null>(null);
+
+  // Listen to URL hash for direct links (#privacy, #terms, #gst, #drug-license)
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.toLowerCase().replace('#', '');
+      if (hash === 'privacy' || hash === 'terms' || hash === 'gst' || hash === 'drug-license') {
+        setLegalModalTab(hash as LegalTab);
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   // Check if organization type selection is needed on initial registration/login
   const hasSelectedOrgType = !!(
@@ -179,7 +195,7 @@ const AppContent = () => {
         )}
       </main>
 
-      <Footer />
+      <Footer onOpenLegal={(tab) => setLegalModalTab(tab)} />
 
       {/* Profile Modal */}
       <ProfileModal
@@ -198,6 +214,18 @@ const AppContent = () => {
         isOpen={showOrgTypeModal}
         onClose={() => setShowOrgTypeModal(false)}
         isOnboarding={isSignedIn && !hasSelectedOrgType}
+      />
+
+      {/* Legal & Compliance Modal */}
+      <LegalModal
+        isOpen={legalModalTab !== null}
+        initialTab={legalModalTab || 'privacy'}
+        onClose={() => {
+          setLegalModalTab(null);
+          if (window.location.hash) {
+            history.replaceState(null, '', window.location.pathname);
+          }
+        }}
       />
     </div>
   );
