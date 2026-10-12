@@ -43,7 +43,7 @@ export const Footer = () => {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start space-x-3">
                 <MapPin className="h-5 w-5 text-teal-400 shrink-0" />
-                <span>Clinic Support Hub, Chennai, Tamil Nadu, India</span>
+                <span>No.29, Kamarajar Street, Pallavan Nagar, TNHB, Kancheepuram, Tamil Nadu. 631501</span>
               </li>
               <li className="flex items-center space-x-3">
                 <Mail className="h-5 w-5 text-teal-400 shrink-0" />

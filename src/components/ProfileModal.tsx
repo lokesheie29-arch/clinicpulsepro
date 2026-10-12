@@ -65,7 +65,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
   const [clinicName, setClinicName] = useState((user?.unsafeMetadata?.clinicName as string) || 'ClinicPulse Pro Multispeciality Hospital');
   const [gstNumber, setGstNumber] = useState((user?.unsafeMetadata?.gstNumber as string) || '33ABCDE1234F1Z5');
   const [clinicAddress, setClinicAddress] = useState(
-    (user?.unsafeMetadata?.clinicAddress as string) || '123 Health Avenue, Anna Nagar, Chennai, Tamil Nadu - 600040'
+    (user?.unsafeMetadata?.clinicAddress as string) || 'No.29, Kamarajar Street, Pallavan Nagar, TNHB, Kancheepuram, Tamil Nadu. 631501'
   );
   const [hospitalPhone, setHospitalPhone] = useState((user?.unsafeMetadata?.hospitalPhone as string) || '+91 7200124136');
   const [hospitalEmail, setHospitalEmail] = useState((user?.unsafeMetadata?.hospitalEmail as string) || 'contact@clinicpulsepro.com');

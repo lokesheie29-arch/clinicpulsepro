@@ -16,7 +16,7 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
   const hospitalAddress =
     (user?.unsafeMetadata?.clinicAddress as string) ||
     localStorage.getItem('clinicpulse_clinic_address') ||
-    '123 Health Avenue, Anna Nagar, Chennai, TN - 600040';
+    'No.29, Kamarajar Street, Pallavan Nagar, TNHB, Kancheepuram, Tamil Nadu. 631501';
   const hospitalGst =
     (user?.unsafeMetadata?.gstNumber as string) ||
     localStorage.getItem('clinicpulse_clinic_gst') ||
