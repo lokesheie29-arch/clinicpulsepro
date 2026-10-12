@@ -1,5 +1,6 @@
-import { Activity, ShieldCheck, Key, UserCheck } from 'lucide-react';
+import { ShieldCheck, Key, UserCheck } from 'lucide-react';
 import { Show, SignInButton, SignUpButton, UserButton, useUser } from '@clerk/react';
+import { Logo } from './Logo';
 
 interface NavbarProps {
   onAdminClick?: () => void;
@@ -21,11 +22,10 @@ export const Navbar = ({
     <nav className="print:hidden sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
-          <div className="flex items-center space-x-2">
-            <Activity className="h-8 w-8 text-teal-600" />
-            <span className="font-bold text-xl text-navy-900">ClinicPulse Pro</span>
+          <div className="flex items-center space-x-3">
+            <Logo size="md" variant="dark" />
             <Show when="signed-in">
-              <span className="hidden sm:inline-block ml-2 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider bg-teal-50 text-teal-700 border border-teal-200 rounded-full">
+              <span className="hidden sm:inline-block px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider bg-teal-50 text-teal-700 border border-teal-200 rounded-full">
                 Staff Portal
               </span>
             </Show>
