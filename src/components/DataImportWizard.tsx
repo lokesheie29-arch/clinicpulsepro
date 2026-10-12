@@ -50,11 +50,11 @@ export const DataImportWizard: React.FC<DataImportWizardProps> = ({ isOpen, onCl
         `Pantoprazole 40mg,Pan 40,Antacid,PN-7788,3004,4.50,9.00,12,90,2026-12-31`;
       downloadName = 'sample_medicines_inventory.csv';
     } else if (type === 'patients') {
-      csvContent = `name,phone,age,gender,complaints,bp,pulse,spo2\n` +
-        `Ramesh Babu,9876543210,48,Male,Fever & persistent bodyache,120/80,78,98%\n` +
-        `Sunita Devi,9876543211,36,Female,Dry cough & throat irritation,118/76,72,99%\n` +
-        `Vigneshwaran K,9876543212,29,Male,Acute acidity & indigestion,130/85,82,97%\n` +
-        `Lakshmi Narayanan,9876543213,62,Male,Routine diabetic checkup,135/88,75,98%`;
+      csvContent = `name,phone,age,gender,complaints,bp,pulse,temp,spo2,weight\n` +
+        `Ramesh Babu,9876543210,48,Male,Fever & persistent bodyache,120/80,78,99.1,98%,72\n` +
+        `Sunita Devi,9876543211,36,Female,Dry cough & throat irritation,118/76,72,98.6,99%,58\n` +
+        `Vigneshwaran K,9876543212,29,Male,Acute acidity & indigestion,130/85,82,98.4,97%,68\n` +
+        `Lakshmi Narayanan,9876543213,62,Male,Routine diabetic checkup,135/88,75,98.6,98%,75`;
       downloadName = 'sample_patients_directory.csv';
     } else {
       csvContent = `patient_name,patient_phone,doctor_name,date,consultation_fee,diagnosis,total_amount,payment_status\n` +
@@ -150,11 +150,11 @@ export const DataImportWizard: React.FC<DataImportWizardProps> = ({ isOpen, onCl
             age: Number(row.age) || 35,
             gender: 'Male',
             complaints: row.diagnosis || 'Past Consultation',
-            bp: '120/80',
-            pulse: '72',
-            temp: '98.6',
-            spo2: '98%',
-            weight: '65'
+            bp: row.bp || '120/80',
+            pulse: row.pulse || '72',
+            temp: row.temp || '98.6',
+            spo2: row.spo2 || '98%',
+            weight: row.weight || '65'
           },
           doctorId: 'doc-1',
           consultationFee: Number(row.consultation_fee) || 500,

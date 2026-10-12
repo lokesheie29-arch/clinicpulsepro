@@ -40,7 +40,8 @@ export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string
       quantity: 6,
       pricePerUnit: med.sellingPrice,
       totalPrice: med.sellingPrice * 6,
-      gstRate: med.gstRate
+      gstRate: med.gstRate,
+      foodTiming: 'After Food'
     }]);
     setSearchQuery('');
   };
@@ -160,6 +161,10 @@ export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string
               <label className="block text-xs font-medium text-slate-500 mb-1">SpO2 (%)</label>
               <input type="text" value={patient.spo2} onChange={e => setPatient({...patient, spo2: e.target.value})} className="w-full p-2 border border-slate-200 rounded-md outline-none text-sm" placeholder="99" />
             </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-slate-500 mb-1">Weight (kg)</label>
+              <input type="text" value={patient.weight} onChange={e => setPatient({...patient, weight: e.target.value})} className="w-full p-2 border border-slate-200 rounded-md outline-none text-sm" placeholder="e.g. 70" />
+            </div>
           </div>
         </div>
       </div>
@@ -220,6 +225,7 @@ export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string
                 <tr>
                   <th className="px-3 py-2 rounded-tl-lg">Medicine</th>
                   <th className="px-3 py-2">Dosage</th>
+                  <th className="px-3 py-2">When to Use (Food)</th>
                   <th className="px-3 py-2">Days</th>
                   <th className="px-3 py-2 text-center">Qty</th>
                   <th className="px-3 py-2 rounded-tr-lg"></th>
@@ -227,10 +233,10 @@ export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string
               </thead>
               <tbody>
                 {prescriptions.map((p) => (
-                  <tr key={p.id} className="border-b border-slate-100 last:border-0">
+                  <tr key={p.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50">
                     <td className="px-3 py-3 font-medium text-navy-900">{p.medicineName}</td>
                     <td className="px-3 py-3">
-                      <select value={p.dosage} onChange={e => updatePrescription(p.id, 'dosage', e.target.value)} className="p-1 border border-slate-200 rounded text-xs bg-white">
+                      <select value={p.dosage} onChange={e => updatePrescription(p.id, 'dosage', e.target.value)} className="p-1 border border-slate-200 rounded text-xs bg-white font-medium">
                         <option>1-0-1</option>
                         <option>1-1-1</option>
                         <option>1-0-0</option>
@@ -239,11 +245,31 @@ export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string
                       </select>
                     </td>
                     <td className="px-3 py-3">
+                      <select
+                        value={p.foodTiming || 'After Food'}
+                        onChange={e => updatePrescription(p.id, 'foodTiming', e.target.value)}
+                        className={`p-1.5 border rounded text-xs font-semibold ${
+                          (p.foodTiming || 'After Food') === 'After Food'
+                            ? 'bg-blue-50 text-blue-700 border-blue-200'
+                            : (p.foodTiming || 'After Food') === 'Before Food'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : (p.foodTiming || 'After Food') === 'Empty Stomach'
+                            ? 'bg-rose-50 text-rose-700 border-rose-200'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        }`}
+                      >
+                        <option value="After Food">After Food (Post-Meal)</option>
+                        <option value="Before Food">Before Food (Pre-Meal)</option>
+                        <option value="With Food">With Food</option>
+                        <option value="Empty Stomach">Empty Stomach</option>
+                      </select>
+                    </td>
+                    <td className="px-3 py-3">
                       <input type="number" value={p.durationDays} onChange={e => updatePrescription(p.id, 'durationDays', parseInt(e.target.value) || 1)} className="w-16 p-1 border border-slate-200 rounded text-xs text-center" />
                     </td>
                     <td className="px-3 py-3 text-center font-semibold text-teal-700">{p.quantity}</td>
                     <td className="px-3 py-3 text-right">
-                      <button onClick={() => removePrescription(p.id)} className="text-slate-400 hover:text-red-500 transition-colors">
+                      <button onClick={() => removePrescription(p.id)} className="text-slate-400 hover:text-red-500 transition-colors p-1" title="Remove Medicine">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </td>
@@ -251,7 +277,7 @@ export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string
                 ))}
                 {prescriptions.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-3 py-8 text-center text-slate-400 text-sm">
+                    <td colSpan={6} className="px-3 py-8 text-center text-slate-400 text-sm">
                       No medicines added yet. Search above to add.
                     </td>
                   </tr>

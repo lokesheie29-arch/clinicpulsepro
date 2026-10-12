@@ -85,7 +85,8 @@ export const initialInvoices: Invoice[] = [
         quantity: 6,
         pricePerUnit: 2.0,
         totalPrice: 12.0,
-        gstRate: 12
+        gstRate: 12,
+        foodTiming: 'After Food'
       }
     ],
     subTotal: 512,

@@ -25,6 +25,7 @@ export interface PrescriptionItem {
   pricePerUnit: number;
   totalPrice: number;
   gstRate: number;
+  foodTiming?: 'After Food' | 'Before Food' | 'With Food' | 'Empty Stomach' | string;
 }
 
 export interface PatientDetails {

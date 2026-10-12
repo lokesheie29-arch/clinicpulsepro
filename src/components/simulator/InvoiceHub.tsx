@@ -51,7 +51,7 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
       colors: ['#00A896', '#0D9488', '#0F4C81']
     });
 
-    const text = `*${hospitalName} - Medical Tax Invoice* %0A%0AHello *${invoice.patient.name}*,%0AThank you for your visit today.%0A%0A*Invoice ID:* ${invoice.id}%0A*Doctor:* ${doctor?.name}%0A*Helpline:* ${hospitalPhone}%0A*Email:* ${hospitalEmail}%0A*GSTIN:* ${hospitalGst}%0A*Total Amount:* ₹${invoice.totalAmount.toFixed(2)}%0A%0A*Medicines Prescribed:*%0A${invoice.prescriptionItems.map(p => `- ${p.medicineName} (${p.dosage}) for ${p.durationDays} days`).join('%0A')}%0A%0A*Payment Link:* https://pay.clinicpulse.demo/${invoice.id}%0A%0ARecover well!`;
+    const text = `*${hospitalName} - Medical Tax Invoice* %0A%0AHello *${invoice.patient.name}*,%0AThank you for your visit today.%0A%0A*Invoice ID:* ${invoice.id}%0A*Doctor:* ${doctor?.name}%0A*Helpline:* ${hospitalPhone}%0A*Email:* ${hospitalEmail}%0A*GSTIN:* ${hospitalGst}%0A*Total Amount:* ₹${invoice.totalAmount.toFixed(2)}%0A%0A*Medicines Prescribed:*%0A${invoice.prescriptionItems.map(p => `- ${p.medicineName} (${p.dosage}) [${p.foodTiming || 'After Food'}] for ${p.durationDays} days`).join('%0A')}%0A%0A*Payment Link:* https://pay.clinicpulse.demo/${invoice.id}%0A%0ARecover well!`;
     
     window.open(`https://wa.me/91${invoice.patient.phone}?text=${text}`, '_blank');
   };
@@ -83,7 +83,7 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
           </div>
 
           {/* Details */}
-          <div className="flex justify-between mb-8">
+          <div className="flex justify-between mb-4">
             <div>
               <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Patient Details</h3>
               <p className="font-medium text-navy-900">{invoice.patient.name} ({invoice.patient.age}{invoice.patient.gender[0]})</p>
@@ -95,6 +95,18 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
               <p className="text-sm text-slate-600">{doctor?.specialty} | {doctor?.regNo}</p>
             </div>
           </div>
+
+          {/* Recorded Vitals */}
+          {(invoice.patient.bp || invoice.patient.pulse || invoice.patient.temp || invoice.patient.spo2 || invoice.patient.weight) && (
+            <div className="mb-6 p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 flex flex-wrap items-center gap-x-4 gap-y-1">
+              <span className="font-semibold text-navy-900">Vitals:</span>
+              {invoice.patient.bp && <span>BP: <strong className="font-medium">{invoice.patient.bp} mmHg</strong></span>}
+              {invoice.patient.pulse && <span>Pulse: <strong className="font-medium">{invoice.patient.pulse} bpm</strong></span>}
+              {invoice.patient.temp && <span>Temp: <strong className="font-medium">{invoice.patient.temp} °F</strong></span>}
+              {invoice.patient.spo2 && <span>SpO2: <strong className="font-medium">{invoice.patient.spo2}%</strong></span>}
+              {invoice.patient.weight && <span>Weight: <strong className="font-medium">{invoice.patient.weight} kg</strong></span>}
+            </div>
+          )}
 
           {/* Items */}
           <table className="w-full mb-8">
@@ -119,9 +131,22 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
               {invoice.prescriptionItems.map(item => (
                 <tr key={item.id} className="border-b border-slate-100">
                   <td className="py-3">
-                    <div className="font-medium text-navy-900">{item.medicineName}</div>
-                    <div className="text-xs text-slate-500">
-                      HSN: {item.hsn || item.id} | GST: {item.gstRate}%
+                    <div className="font-medium text-navy-900 flex items-center flex-wrap gap-2">
+                      <span>{item.medicineName}</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded font-semibold border ${
+                        (item.foodTiming || 'After Food') === 'After Food'
+                          ? 'bg-blue-50 text-blue-700 border-blue-200'
+                          : (item.foodTiming || 'After Food') === 'Before Food'
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : (item.foodTiming || 'After Food') === 'Empty Stomach'
+                          ? 'bg-rose-50 text-rose-700 border-rose-200'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      }`}>
+                        {item.foodTiming || 'After Food'}
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-500 mt-0.5">
+                      Dosage: <span className="font-medium text-slate-700">{item.dosage}</span> ({item.durationDays} days) &nbsp;|&nbsp; HSN: {item.hsn || item.id} &nbsp;|&nbsp; GST: {item.gstRate}%
                     </div>
                     <div className="text-[11px] text-slate-400 mt-0.5">
                       Batch: {item.batchNo || 'N/A'} | Exp: {item.expiryDate ? new Date(item.expiryDate).toLocaleDateString('en-GB', { month: 'short', year: '2-digit' }) : 'N/A'}
