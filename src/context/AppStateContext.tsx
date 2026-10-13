@@ -13,6 +13,7 @@ interface AppStateContextType {
   addInvoice: (invoice: Invoice) => void;
   updateMedicineStock: (id: string, qtyToDeduct: number) => void;
   addMedicine: (med: Medicine) => void;
+  updateMedicine: (id: string, updated: Partial<Medicine>) => void;
   restockMedicine: (id: string, qtyToAdd: number) => void;
   addLabReport: (report: LabReport) => void;
   updateLabReport: (reportId: string, updatedReport: LabReport) => void;
@@ -191,6 +192,10 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   };
 
+  const updateMedicine = (id: string, updated: Partial<Medicine>) => {
+    setMedicines(prev => prev.map(med => med.id === id ? { ...med, ...updated } : med));
+  };
+
   const addLabReport = (report: LabReport) => {
     setLabReports(prev => [report, ...prev]);
     supabase.from('lab_reports').insert({
@@ -316,7 +321,7 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     <AppStateContext.Provider value={{
       medicines, invoices, labTests, labReports,
       orgType, setOrgType,
-      addInvoice, updateMedicineStock, addMedicine, restockMedicine,
+      addInvoice, updateMedicineStock, addMedicine, updateMedicine, restockMedicine,
       addLabReport, updateLabReport, addLabTest, updateLabTest, deleteLabTest,
       updateInvoicePaymentStatus,
       bulkAddMedicines, bulkAddInvoices, resetDemoData

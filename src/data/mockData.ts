@@ -1,57 +1,109 @@
 import { Medicine, Invoice, LabTest, LabReport } from '../types';
 
+const getRelativeDate = (days: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
+};
+
 export const initialMedicines: Medicine[] = [
   {
     id: 'med-1',
     genericName: 'Paracetamol 500mg',
     brandName: 'Dolo 500',
-    batchNo: 'B202301',
+    batchNo: 'B202601',
     hsn: '3004',
     costPrice: 1.5,
     sellingPrice: 2.0,
     gstRate: 12,
     stock: 500,
-    expiryDate: '2026-12-31',
+    expiryDate: getRelativeDate(420), // > 1 Year (Safe)
     category: 'Analgesics',
+    minStockAlert: 100,
   },
   {
     id: 'med-2',
     genericName: 'Amoxicillin 250mg',
-    brandName: 'Amoxil',
-    batchNo: 'B202302',
+    brandName: 'Amoxil 250',
+    batchNo: 'B202602',
     hsn: '3004',
     costPrice: 5.0,
     sellingPrice: 7.5,
     gstRate: 12,
-    stock: 200,
-    expiryDate: '2025-05-31',
+    stock: 22, // Low stock (< 50)
+    expiryDate: getRelativeDate(250), // < 1 Year Alert
     category: 'Antibiotics',
+    minStockAlert: 50,
   },
   {
     id: 'med-3',
     genericName: 'Pantoprazole 40mg',
     brandName: 'Pan 40',
-    batchNo: 'B202303',
+    batchNo: 'B202603',
     hsn: '3004',
     costPrice: 3.0,
     sellingPrice: 4.5,
     gstRate: 12,
-    stock: 50,
-    expiryDate: '2024-06-30', // Approaching expiry for demo
+    stock: 14, // Low stock (< 40)
+    expiryDate: getRelativeDate(18), // < 1 Month Alert (18 days!)
     category: 'Antacids',
+    minStockAlert: 40,
   },
   {
     id: 'med-4',
     genericName: 'Vitamin C + Zinc',
     brandName: 'Zincovit',
-    batchNo: 'B202304',
+    batchNo: 'B202604',
     hsn: '3004',
     costPrice: 2.5,
     sellingPrice: 4.0,
     gstRate: 18,
-    stock: 300,
-    expiryDate: '2027-01-01',
+    stock: 320,
+    expiryDate: getRelativeDate(75), // < 3 Months Alert (75 days)
     category: 'Vitamins',
+    minStockAlert: 60,
+  },
+  {
+    id: 'med-5',
+    genericName: 'Azithromycin 500mg',
+    brandName: 'Azithral 500',
+    batchNo: 'B202605',
+    hsn: '3004',
+    costPrice: 16.0,
+    sellingPrice: 24.0,
+    gstRate: 12,
+    stock: 35, // Low stock (< 50)
+    expiryDate: getRelativeDate(140), // < 6 Months Alert (140 days)
+    category: 'Antibiotics',
+    minStockAlert: 50,
+  },
+  {
+    id: 'med-6',
+    genericName: 'Cetirizine 10mg',
+    brandName: 'Cetzine 10',
+    batchNo: 'B202606',
+    hsn: '3004',
+    costPrice: 1.2,
+    sellingPrice: 2.5,
+    gstRate: 12,
+    stock: 180,
+    expiryDate: getRelativeDate(300), // < 1 Year Alert (300 days)
+    category: 'Antihistamines',
+    minStockAlert: 50,
+  },
+  {
+    id: 'med-7',
+    genericName: 'Diphenhydramine Syrup 100ml',
+    brandName: 'Benadryl Cough Syrup',
+    batchNo: 'B202509',
+    hsn: '3004',
+    costPrice: 45.0,
+    sellingPrice: 65.0,
+    gstRate: 12,
+    stock: 8, // Low stock & expired
+    expiryDate: getRelativeDate(-10), // Expired 10 days ago!
+    category: 'Syrups',
+    minStockAlert: 25,
   }
 ];
 

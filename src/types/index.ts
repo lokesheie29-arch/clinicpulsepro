@@ -10,6 +10,7 @@ export interface Medicine {
   stock: number;
   expiryDate: string; // YYYY-MM-DD
   category: string;
+  minStockAlert?: number; // Custom low stock threshold quantity
 }
 
 export interface PrescriptionItem {
