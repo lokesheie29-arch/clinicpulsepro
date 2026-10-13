@@ -1,25 +1,32 @@
-import { useState, useMemo } from 'react';
-import { Search, Trash2, ArrowRight } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Search, Trash2, ArrowRight, Smartphone, CheckCircle } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
 import { doctors } from '../../data/mockData';
 import { PrescriptionItem, PatientDetails } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
 
-export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string) => void }) => {
-  const { medicines, addInvoice, updateMedicineStock } = useAppState();
-  
+export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string, patientPhone: string, total: number, billId: string) => void }) => {
+  const { medicines, addInvoice, updateMedicineStock, orgType } = useAppState();
+  const isPharmacy = orgType === 'pharmacy';
+
   const [patient, setPatient] = useState<PatientDetails>({
     name: '', age: 0, gender: 'Male', phone: '', complaints: '', bp: '', pulse: '', temp: '', spo2: '', weight: ''
   });
   const [doctorId, setDoctorId] = useState(doctors[0].id);
-  const [consultationFee, setConsultationFee] = useState(500);
+  // Pharmacy has no consultation fee
+  const [consultationFee, setConsultationFee] = useState(isPharmacy ? 0 : 500);
   const [prescriptions, setPrescriptions] = useState<PrescriptionItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Keep fee at 0 if orgType switches to pharmacy
+  useEffect(() => {
+    if (isPharmacy) setConsultationFee(0);
+  }, [isPharmacy]);
+
   const filteredMedicines = useMemo(() => {
     if (!searchQuery) return [];
-    return medicines.filter(m => 
-      m.brandName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    return medicines.filter(m =>
+      m.brandName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       m.genericName.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [searchQuery, medicines]);
@@ -72,11 +79,11 @@ export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string
       return;
     }
 
-    const subTotal = consultationFee + prescriptions.reduce((acc, p) => acc + p.totalPrice, 0);
-    // Rough GST calc: assuming consultation is 18% GST (9+9) and medicines are separate.
-    // For simplicity in demo, let's calculate exact CGST/SGST per item
-    let cgst = consultationFee * 0.09;
-    let sgst = consultationFee * 0.09;
+    const effectiveFee = isPharmacy ? 0 : consultationFee;
+    const subTotal = effectiveFee + prescriptions.reduce((acc, p) => acc + p.totalPrice, 0);
+
+    let cgst = effectiveFee * 0.09;
+    let sgst = effectiveFee * 0.09;
 
     prescriptions.forEach(p => {
       const tax = (p.totalPrice * p.gstRate) / 100;
@@ -84,29 +91,44 @@ export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string
       sgst += tax / 2;
     });
 
+    const totalAmount = subTotal + cgst + sgst;
+    const billId = `INV-${Math.floor(1000 + Math.random() * 9000)}`;
+
     const invoice = {
-      id: `INV-${Math.floor(1000 + Math.random() * 9000)}`,
+      id: billId,
       patient,
       doctorId,
-      consultationFee,
+      consultationFee: effectiveFee,
       prescriptionItems: prescriptions,
       subTotal,
       cgst,
       sgst,
-      totalAmount: subTotal + cgst + sgst,
+      totalAmount,
       date: new Date().toISOString(),
       paymentStatus: 'Pending' as const
     };
 
     addInvoice(invoice);
-    
+
     // Deduct stock
     prescriptions.forEach(p => {
       updateMedicineStock(p.medicineId, p.quantity);
     });
 
-    onComplete(invoice.id);
+    // Auto-dispatch WhatsApp payment link to patient's phone
+    const cleanPhone = patient.phone.replace(/\D/g, '');
+    const vpa = "clinicpulse@upi";
+    const upiString = `upi://pay?pa=${vpa}&pn=ClinicPulse&am=${totalAmount.toFixed(2)}&cu=INR&tn=Invoice-${billId}`;
+    const medSummary = prescriptions.map(p => `• ${p.medicineName} (${p.quantity} qty)`).join('%0A');
+    const waText = `*${isPharmacy ? 'Pharmacy Bill' : 'Medical Tax Invoice'} %26 Payment Link - Bill %23${billId}*%0A%0AHello *${patient.name}*,%0AYour medical bill has been generated.%0A%0A*Amount Due:* ₹${totalAmount.toFixed(2)}%0A*Payment Link (Instant UPI):*%0A${encodeURIComponent(upiString)}%0A%0A*Medicines:*%0A${medSummary}%0A%0APlease pay using the UPI link above. Once payment is done, your official PDF bill will be generated and sent automatically!%0A%0A*** WISH YOU A SPEEDY RECOVERY ***`;
+
+    if (cleanPhone) {
+      window.open(`https://wa.me/91${cleanPhone}?text=${waText}`, '_blank');
+    }
+
+    onComplete(invoice.id, patient.phone, totalAmount, billId);
   };
+
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -173,21 +195,38 @@ export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string
       <div className="lg:col-span-2 space-y-6">
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
           <div className="flex-1 w-full">
-            <label className="block text-xs font-medium text-slate-500 mb-1">Consulting Doctor</label>
+            <label className="block text-xs font-medium text-slate-500 mb-1">
+              {isPharmacy ? 'Prescribing Doctor (Optional / Direct)' : 'Consulting Doctor'}
+            </label>
             <select value={doctorId} onChange={e => setDoctorId(e.target.value)} className="w-full p-2 border border-slate-200 rounded-md outline-none text-sm">
               {doctors.map(d => (
                 <option key={d.id} value={d.id}>{d.name} ({d.specialty})</option>
               ))}
             </select>
           </div>
-          <div className="w-full md:w-48">
-            <label className="block text-xs font-medium text-slate-500 mb-1">Consultation Fee (₹)</label>
-            <input type="number" value={consultationFee} onChange={e => setConsultationFee(parseInt(e.target.value) || 0)} className="w-full p-2 border border-slate-200 rounded-md outline-none text-sm font-semibold text-teal-700" />
-          </div>
+          {isPharmacy ? (
+            <div className="w-full md:w-56 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-center justify-center font-medium">
+              <span>💊 Pharmacy Sale (Zero Consultation Fee)</span>
+            </div>
+          ) : (
+            <div className="w-full md:w-48">
+              <label className="block text-xs font-medium text-slate-500 mb-1">Consultation Fee (₹)</label>
+              <input type="number" value={consultationFee} onChange={e => setConsultationFee(parseInt(e.target.value) || 0)} className="w-full p-2 border border-slate-200 rounded-md outline-none text-sm font-semibold text-teal-700" />
+            </div>
+          )}
         </div>
 
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm min-h-[350px] flex flex-col">
-          <h3 className="text-lg font-semibold text-navy-900 mb-4 border-b pb-2">Rx - Prescription Studio</h3>
+          <div className="flex justify-between items-center mb-4 border-b pb-2">
+            <h3 className="text-lg font-semibold text-navy-900">
+              {isPharmacy ? 'Pharmacy Dispensing Studio' : 'Rx - Prescription Studio'}
+            </h3>
+            {isPharmacy && (
+              <span className="text-xs bg-teal-50 text-teal-700 font-semibold px-2.5 py-1 rounded-full border border-teal-200">
+                Medical Store POS
+              </span>
+            )}
+          </div>
           
           <div className="relative mb-6">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -291,7 +330,8 @@ export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string
               onClick={handleFinalize}
               className="flex items-center space-x-2 bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
             >
-              <span>Finalize & Generate Tax Invoice</span>
+              <Smartphone className="h-4 w-4" />
+              <span>Generate Bill & Send WhatsApp Payment Link</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>

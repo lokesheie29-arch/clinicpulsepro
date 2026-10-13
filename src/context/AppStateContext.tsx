@@ -19,6 +19,7 @@ interface AppStateContextType {
   addLabTest: (test: LabTest) => void;
   updateLabTest: (id: string, test: LabTest) => void;
   deleteLabTest: (id: string) => void;
+  updateInvoicePaymentStatus: (id: string, status: 'Pending' | 'Paid') => void;
   bulkAddMedicines: (newMeds: Medicine[]) => void;
   bulkAddInvoices: (newInvs: Invoice[]) => void;
   resetDemoData: () => void;
@@ -226,6 +227,15 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setLabTests(prev => prev.filter(t => t.id !== id));
   };
 
+  const updateInvoicePaymentStatus = (id: string, status: 'Pending' | 'Paid') => {
+    setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, paymentStatus: status } : inv));
+    supabase.from('invoices').update({
+      payment_status: status
+    }).eq('id', id).then(({ error }) => {
+      if (error) console.error('Failed to update invoice payment status in Supabase:', error.message);
+    });
+  };
+
   const updateMedicineStock = (id: string, qtyToDeduct: number) => {
     setMedicines(prev => prev.map(med => {
       if (med.id === id) {
@@ -308,6 +318,7 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       orgType, setOrgType,
       addInvoice, updateMedicineStock, addMedicine, restockMedicine,
       addLabReport, updateLabReport, addLabTest, updateLabTest, deleteLabTest,
+      updateInvoicePaymentStatus,
       bulkAddMedicines, bulkAddInvoices, resetDemoData
     }}>
       {children}
