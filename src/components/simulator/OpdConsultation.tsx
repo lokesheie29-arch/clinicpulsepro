@@ -35,6 +35,8 @@ export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string
     const med = medicines.find(m => m.id === medId);
     if (!med) return;
     
+    const qty = 6;
+    const gross = med.sellingPrice * qty;
     setPrescriptions([...prescriptions, {
       id: uuidv4(),
       medicineId: med.id,
@@ -44,9 +46,11 @@ export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string
       hsn: med.hsn,
       dosage: '1-0-1',
       durationDays: 3,
-      quantity: 6,
+      quantity: qty,
       pricePerUnit: med.sellingPrice,
-      totalPrice: med.sellingPrice * 6,
+      discountPercent: 0,
+      discountAmount: 0,
+      totalPrice: gross,
       gstRate: med.gstRate,
       foodTiming: 'After Food'
     }]);
@@ -57,12 +61,16 @@ export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string
     setPrescriptions(prev => prev.map(p => {
       if (p.id === id) {
         const updated = { ...p, [field]: value };
-        // Recalculate quantity and price if dosage or duration changes
+        // Recalculate quantity and price if dosage, duration or discount changes
         if (field === 'dosage' || field === 'durationDays') {
           const timesPerDay = (updated.dosage.match(/1/g) || []).length || (updated.dosage === 'SOS' ? 1 : 1);
           updated.quantity = timesPerDay * updated.durationDays;
-          updated.totalPrice = updated.quantity * updated.pricePerUnit;
         }
+        const gross = updated.quantity * updated.pricePerUnit;
+        const discPct = Math.max(0, Math.min(100, Number(updated.discountPercent) || 0));
+        updated.discountPercent = discPct;
+        updated.discountAmount = (gross * discPct) / 100;
+        updated.totalPrice = Math.max(0, gross - updated.discountAmount);
         return updated;
       }
       return p;
@@ -80,7 +88,9 @@ export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string
     }
 
     const effectiveFee = isPharmacy ? 0 : consultationFee;
-    const subTotal = effectiveFee + prescriptions.reduce((acc, p) => acc + p.totalPrice, 0);
+    const grossMedicineTotal = prescriptions.reduce((acc, p) => acc + (p.quantity * p.pricePerUnit), 0);
+    const totalDiscount = prescriptions.reduce((acc, p) => acc + (p.discountAmount || 0), 0);
+    const subTotal = effectiveFee + (grossMedicineTotal - totalDiscount);
 
     let cgst = effectiveFee * 0.09;
     let sgst = effectiveFee * 0.09;
@@ -101,6 +111,7 @@ export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string
       consultationFee: effectiveFee,
       prescriptionItems: prescriptions,
       subTotal,
+      totalDiscount,
       cgst,
       sgst,
       totalAmount,
@@ -263,18 +274,21 @@ export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string
               <thead className="text-xs text-slate-500 bg-slate-50">
                 <tr>
                   <th className="px-3 py-2 rounded-tl-lg">Medicine</th>
-                  <th className="px-3 py-2">Dosage</th>
-                  <th className="px-3 py-2">When to Use (Food)</th>
-                  <th className="px-3 py-2">Days</th>
-                  <th className="px-3 py-2 text-center">Qty</th>
-                  <th className="px-3 py-2 rounded-tr-lg"></th>
+                  <th className="px-2 py-2">Dosage</th>
+                  <th className="px-2 py-2">Food Timing</th>
+                  <th className="px-2 py-2 text-center">Days</th>
+                  <th className="px-2 py-2 text-center">Qty</th>
+                  <th className="px-2 py-2 text-right">MRP (₹)</th>
+                  <th className="px-2 py-2 text-center">Disc %</th>
+                  <th className="px-2 py-2 text-right">Total (₹)</th>
+                  <th className="px-2 py-2 rounded-tr-lg"></th>
                 </tr>
               </thead>
               <tbody>
                 {prescriptions.map((p) => (
                   <tr key={p.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50">
                     <td className="px-3 py-3 font-medium text-navy-900">{p.medicineName}</td>
-                    <td className="px-3 py-3">
+                    <td className="px-2 py-3">
                       <select value={p.dosage} onChange={e => updatePrescription(p.id, 'dosage', e.target.value)} className="p-1 border border-slate-200 rounded text-xs bg-white font-medium">
                         <option>1-0-1</option>
                         <option>1-1-1</option>
@@ -283,7 +297,7 @@ export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string
                         <option>SOS</option>
                       </select>
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="px-2 py-3">
                       <select
                         value={p.foodTiming || 'After Food'}
                         onChange={e => updatePrescription(p.id, 'foodTiming', e.target.value)}
@@ -303,11 +317,36 @@ export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string
                         <option value="Empty Stomach">Empty Stomach</option>
                       </select>
                     </td>
-                    <td className="px-3 py-3">
-                      <input type="number" value={p.durationDays} onChange={e => updatePrescription(p.id, 'durationDays', parseInt(e.target.value) || 1)} className="w-16 p-1 border border-slate-200 rounded text-xs text-center" />
+                    <td className="px-2 py-3 text-center">
+                      <input type="number" value={p.durationDays} onChange={e => updatePrescription(p.id, 'durationDays', parseInt(e.target.value) || 1)} className="w-14 p-1 border border-slate-200 rounded text-xs text-center" />
                     </td>
-                    <td className="px-3 py-3 text-center font-semibold text-teal-700">{p.quantity}</td>
-                    <td className="px-3 py-3 text-right">
+                    <td className="px-2 py-3 text-center font-semibold text-teal-700">{p.quantity}</td>
+                    <td className="px-2 py-3 text-right font-medium text-slate-600">
+                      ₹{p.pricePerUnit.toFixed(2)}
+                    </td>
+                    <td className="px-2 py-3 text-center">
+                      <div className="inline-flex items-center gap-0.5 justify-center">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={p.discountPercent ?? 0}
+                          onChange={e => updatePrescription(p.id, 'discountPercent', parseFloat(e.target.value) || 0)}
+                          className="w-12 p-1 border border-slate-200 rounded text-xs text-center font-medium focus:ring-1 focus:ring-teal-500 outline-none"
+                          placeholder="0"
+                        />
+                        <span className="text-[10px] text-slate-400">%</span>
+                      </div>
+                    </td>
+                    <td className="px-2 py-3 text-right font-bold text-slate-800">
+                      ₹{p.totalPrice.toFixed(2)}
+                      {(p.discountAmount ?? 0) > 0 && (
+                        <div className="text-[10px] text-emerald-600 font-normal">
+                          -₹{(p.discountAmount || 0).toFixed(1)} off
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-2 py-3 text-right">
                       <button onClick={() => removePrescription(p.id)} className="text-slate-400 hover:text-red-500 transition-colors p-1" title="Remove Medicine">
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -316,7 +355,7 @@ export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string
                 ))}
                 {prescriptions.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-3 py-8 text-center text-slate-400 text-sm">
+                    <td colSpan={9} className="px-3 py-8 text-center text-slate-400 text-sm">
                       No medicines added yet. Search above to add.
                     </td>
                   </tr>

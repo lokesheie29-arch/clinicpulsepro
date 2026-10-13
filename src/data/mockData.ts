@@ -136,15 +136,18 @@ export const initialInvoices: Invoice[] = [
         durationDays: 3,
         quantity: 6,
         pricePerUnit: 2.0,
-        totalPrice: 12.0,
+        discountPercent: 10,
+        discountAmount: 1.20,
+        totalPrice: 10.80,
         gstRate: 12,
         foodTiming: 'After Food'
       }
     ],
-    subTotal: 512,
-    cgst: 30.72,
-    sgst: 30.72,
-    totalAmount: 573.44,
+    subTotal: 510.80,
+    totalDiscount: 1.20,
+    cgst: 30.65,
+    sgst: 30.65,
+    totalAmount: 572.10,
     date: new Date(Date.now() - 86400000).toISOString(), // Yesterday
     paymentStatus: 'Paid'
   }

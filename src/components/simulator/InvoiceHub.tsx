@@ -83,6 +83,24 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
   // Pharmacy bills do NOT include consultation fee
   const hasConsultation = !isPharmacy && (invoice.consultationFee > 0);
 
+  // Computed discount
+  const totalDiscount = useMemo(() => {
+    if (invoice.totalDiscount !== undefined && invoice.totalDiscount > 0) {
+      return invoice.totalDiscount;
+    }
+    return invoice.prescriptionItems.reduce((acc, p) => {
+      if (p.discountAmount !== undefined && p.discountAmount > 0) {
+        return acc + p.discountAmount;
+      }
+      if (p.discountPercent !== undefined && p.discountPercent > 0) {
+        return acc + ((p.quantity * p.pricePerUnit * p.discountPercent) / 100);
+      }
+      return acc;
+    }, 0);
+  }, [invoice]);
+
+  const grossSubTotal = invoice.subTotal + totalDiscount;
+
   // Computed totals
   const totalQty = invoice.prescriptionItems.reduce((acc, p) => acc + p.quantity, 0);
   const itemCount = invoice.prescriptionItems.length + (invoice.labItems?.length || 0) + (hasConsultation ? 1 : 0);
@@ -104,8 +122,12 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
     });
 
     const cleanPhone = invoice.patient.phone.replace(/\D/g, '');
-    const medSummary = invoice.prescriptionItems.map(p => `• ${p.medicineName} (${p.quantity} qty)`).join('%0A');
-    const waText = `*${isPharmacy ? 'Pharmacy Tax Invoice' : 'Medical Tax Invoice'} %26 Payment Link - Bill %23${invoice.id}*%0A%0AHello *${invoice.patient.name}*,%0AYour medical bill has been generated at *${hospitalName}*.%0A%0A*Bill No:* ${invoice.id}%0A*Doctor:* ${doctor?.name || 'General'}%0A*Total Amount Due:* ₹${invoice.totalAmount.toFixed(2)}%0A*Payment Status:* PENDING PAYMENT%0A%0A*Payment Link (Instant UPI):*%0A${encodeURIComponent(upiString)}%0A%0A*Medicines Prescribed:*%0A${medSummary}%0A%0APlease pay using the UPI link above. Once payment is confirmed, your official PDF bill will be generated and dispatched automatically!%0A%0A*** WISH YOU A SPEEDY RECOVERY ***`;
+    const medSummary = invoice.prescriptionItems.map(p => {
+      const discStr = (p.discountPercent && p.discountPercent > 0) ? ` [${p.discountPercent}% Off]` : '';
+      return `• ${p.medicineName} (${p.quantity} qty)${discStr}`;
+    }).join('%0A');
+    const discountLine = totalDiscount > 0 ? `%0A*Discount Saved:* -₹${totalDiscount.toFixed(2)}%0A` : '';
+    const waText = `*${isPharmacy ? 'Pharmacy Tax Invoice' : 'Medical Tax Invoice'} %26 Payment Link - Bill %23${invoice.id}*%0A%0AHello *${invoice.patient.name}*,%0AYour medical bill has been generated at *${hospitalName}*.%0A%0A*Bill No:* ${invoice.id}%0A*Doctor:* ${doctor?.name || 'General'}%0A*Total Amount Due:* ₹${invoice.totalAmount.toFixed(2)}${discountLine}%0A*Payment Status:* PENDING PAYMENT%0A%0A*Payment Link (Instant UPI):*%0A${encodeURIComponent(upiString)}%0A%0A*Medicines Prescribed:*%0A${medSummary}%0A%0APlease pay using the UPI link above. Once payment is confirmed, your official PDF bill will be generated and dispatched automatically!%0A%0A*** WISH YOU A SPEEDY RECOVERY ***`;
 
     window.open(`https://wa.me/91${cleanPhone}?text=${waText}`, '_blank');
     setStatusMessage('Payment link dispatched to patient WhatsApp!');
@@ -161,8 +183,12 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
 
       // Step D: Automatically open WhatsApp with Payment Confirmation & PDF alert
       const cleanPhone = invoice.patient.phone.replace(/\D/g, '');
-      const medList = invoice.prescriptionItems.map(p => `• ${p.medicineName} (${p.quantity} qty)`).join('%0A');
-      const paidWaText = `*${hospitalName} - Payment Confirmation %26 Official Tax Invoice*%0A%0AHello *${invoice.patient.name}*,%0AThank you! We have received your payment of *₹${invoice.totalAmount.toFixed(2)}* for Bill *%23${invoice.id}* (Status: *PAID ✓*).%0A%0A*Receipt Details:*%0A- Bill No: ${invoice.id}%0A- Date %26 Time: ${billDateTime}%0A- Doctor: ${doctor?.name || 'General / Direct'}%0A- Total Paid: ₹${invoice.totalAmount.toFixed(2)}%0A- Payment Status: PAID ✓%0A%0A*Items / Medicines:*%0A${medList}%0A%0AYour official GST Tax Invoice PDF has been generated and saved.%0AThank you for choosing ${hospitalName}!%0A%0A*** WISH YOU A SPEEDY RECOVERY ***`;
+      const medList = invoice.prescriptionItems.map(p => {
+        const discStr = (p.discountPercent && p.discountPercent > 0) ? ` [${p.discountPercent}% Off]` : '';
+        return `• ${p.medicineName} (${p.quantity} qty)${discStr}`;
+      }).join('%0A');
+      const discountLine = totalDiscount > 0 ? `%0A- Discount Saved: -₹${totalDiscount.toFixed(2)} (Applied)` : '';
+      const paidWaText = `*${hospitalName} - Payment Confirmation %26 Official Tax Invoice*%0A%0AHello *${invoice.patient.name}*,%0AThank you! We have received your payment of *₹${invoice.totalAmount.toFixed(2)}* for Bill *%23${invoice.id}* (Status: *PAID ✓*).%0A%0A*Receipt Details:*%0A- Bill No: ${invoice.id}%0A- Date %26 Time: ${billDateTime}%0A- Doctor: ${doctor?.name || 'General / Direct'}%0A- Total Paid: ₹${invoice.totalAmount.toFixed(2)}${discountLine}%0A- Payment Status: PAID ✓%0A%0A*Items / Medicines:*%0A${medList}%0A%0AYour official GST Tax Invoice PDF has been generated and saved.%0AThank you for choosing ${hospitalName}!%0A%0A*** WISH YOU A SPEEDY RECOVERY ***`;
 
       window.open(`https://wa.me/91${cleanPhone}?text=${paidWaText}`, '_blank');
       setStatusMessage('Payment verified! Official PDF tax invoice downloaded & sent to patient WhatsApp.');
@@ -264,13 +290,14 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
               <thead>
                 <tr>
                   <th className={thBase} style={{ width: '28px' }}>S.No</th>
-                  <th className={thBase} style={{ width: '52px' }}>MFR</th>
+                  <th className={thBase} style={{ width: '48px' }}>MFR</th>
                   <th className={`${thBase} text-left`}>Product Name</th>
-                  <th className={thBase} style={{ width: '76px' }}>Batch</th>
-                  <th className={thBase} style={{ width: '44px' }}>Exp</th>
-                  <th className={thBase} style={{ width: '32px' }}>Qty</th>
-                  <th className={thBase} style={{ width: '64px' }}>MRP</th>
-                  <th className={thBase} style={{ width: '68px' }}>Amount</th>
+                  <th className={thBase} style={{ width: '70px' }}>Batch</th>
+                  <th className={thBase} style={{ width: '40px' }}>Exp</th>
+                  <th className={thBase} style={{ width: '30px' }}>Qty</th>
+                  <th className={thBase} style={{ width: '58px' }}>MRP</th>
+                  <th className={thBase} style={{ width: '52px' }}>Disc</th>
+                  <th className={thBase} style={{ width: '64px' }}>Amount</th>
                 </tr>
               </thead>
               <tbody>
@@ -287,6 +314,7 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
                     <td className={`${tdBase} text-center`}>—</td>
                     <td className={`${tdBase} text-center`}>—</td>
                     <td className={`${tdBase} text-right`}>₹{invoice.consultationFee.toFixed(2)}</td>
+                    <td className={`${tdBase} text-center text-slate-400`}>—</td>
                     <td className={`${tdBase} text-right font-semibold`}>₹{invoice.consultationFee.toFixed(2)}</td>
                   </tr>
                 )}
@@ -294,6 +322,10 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
                 {/* Medicine Rows */}
                 {invoice.prescriptionItems.map((item, idx) => {
                   const sNo = hasConsultation ? idx + 2 : idx + 1;
+                  const itemDiscPct = item.discountPercent ?? 0;
+                  const itemDiscAmt = item.discountAmount ?? ((item.quantity * item.pricePerUnit * itemDiscPct) / 100);
+                  const hasDiscount = itemDiscPct > 0 || itemDiscAmt > 0;
+
                   return (
                     <tr key={item.id} className={idx % 2 === 0 ? 'bg-slate-50/40' : ''}>
                       <td className={`${tdBase} text-center`}>{sNo}</td>
@@ -325,6 +357,9 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
                       </td>
                       <td className={`${tdBase} text-center font-semibold`}>{item.quantity}</td>
                       <td className={`${tdBase} text-right`}>₹{item.pricePerUnit.toFixed(2)}</td>
+                      <td className={`${tdBase} text-center font-semibold ${hasDiscount ? 'text-emerald-700' : 'text-slate-400'}`}>
+                        {hasDiscount ? (itemDiscPct > 0 ? `${itemDiscPct}%` : `₹${itemDiscAmt.toFixed(1)}`) : '0%'}
+                      </td>
                       <td className={`${tdBase} text-right font-semibold`}>₹{item.totalPrice.toFixed(2)}</td>
                     </tr>
                   );
@@ -345,6 +380,7 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
                       <td className={`${tdBase} text-center`}>—</td>
                       <td className={`${tdBase} text-center`}>1</td>
                       <td className={`${tdBase} text-right`}>₹{item.price.toFixed(2)}</td>
+                      <td className={`${tdBase} text-center text-slate-400`}>—</td>
                       <td className={`${tdBase} text-right font-semibold`}>₹{item.price.toFixed(2)}</td>
                     </tr>
                   );
@@ -360,10 +396,27 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
               <div className="space-y-0.5">
                 <div><span className="font-bold">Item :</span> {itemCount}</div>
                 <div><span className="font-bold">Total Qty :</span> {totalQty}</div>
+                {totalDiscount > 0 && (
+                  <div className="text-emerald-700 font-bold mt-1">
+                    ✓ Total Savings: ₹{totalDiscount.toFixed(2)}
+                  </div>
+                )}
               </div>
               <div className="text-right space-y-0.5">
+                {totalDiscount > 0 && (
+                  <>
+                    <div className="flex gap-12 justify-end">
+                      <span className="text-slate-600">Gross Total:</span>
+                      <span className="font-semibold w-24 text-right">₹{grossSubTotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex gap-12 justify-end text-emerald-700">
+                      <span className="font-medium">Discount :</span>
+                      <span className="font-bold w-24 text-right">-₹{totalDiscount.toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
                 <div className="flex gap-12 justify-end">
-                  <span className="text-slate-600">Sub Total:</span>
+                  <span className="text-slate-600">{totalDiscount > 0 ? 'Taxable Amount:' : 'Sub Total:'}</span>
                   <span className="font-semibold w-24 text-right">₹{invoice.subTotal.toFixed(2)}</span>
                 </div>
                 <div className="flex gap-12 justify-end">

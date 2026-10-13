@@ -24,6 +24,8 @@ export interface PrescriptionItem {
   durationDays: number;
   quantity: number;
   pricePerUnit: number;
+  discountPercent?: number; // e.g., 5, 10
+  discountAmount?: number;  // in INR
   totalPrice: number;
   gstRate: number;
   foodTiming?: 'After Food' | 'Before Food' | 'With Food' | 'Empty Stomach' | string;
@@ -50,6 +52,7 @@ export interface Invoice {
   prescriptionItems: PrescriptionItem[];
   labItems?: LabTestOrder[];
   subTotal: number;
+  totalDiscount?: number;
   cgst: number;
   sgst: number;
   totalAmount: number;
