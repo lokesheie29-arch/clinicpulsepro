@@ -466,59 +466,59 @@ export const PharmacyInventory = () => {
       )}
 
       {/* ─── TOP METRICS SUMMARY CARDS ─── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs min-w-0">
           <div className="flex items-center justify-between text-slate-500 mb-1">
-            <span className="text-xs font-semibold uppercase">Total Inventory</span>
-            <Package className="h-4 w-4 text-teal-600" />
+            <span className="text-xs font-semibold uppercase tracking-wider">Total Inventory</span>
+            <Package className="h-4 w-4 text-teal-600 shrink-0" />
           </div>
-          <div className="text-xl font-extrabold text-navy-900">{totalStockUnits.toLocaleString()} <span className="text-xs font-normal text-slate-500">units</span></div>
-          <div className="text-[11px] text-slate-500 mt-0.5">{medicines.length} Unique SKUs | ₹{totalCostValuation.toFixed(0)} cost</div>
+          <div className="text-xl font-extrabold text-navy-900 truncate">{totalStockUnits.toLocaleString()} <span className="text-xs font-normal text-slate-500">units</span></div>
+          <div className="text-[11px] text-slate-500 mt-0.5 truncate">{medicines.length} Unique SKUs | ₹{totalCostValuation.toFixed(0)} cost</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs min-w-0">
           <div className="flex items-center justify-between text-slate-500 mb-1">
-            <span className="text-xs font-semibold uppercase">Low Stock Alerts</span>
-            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <span className="text-xs font-semibold uppercase tracking-wider">Low Stock Alerts</span>
+            <AlertTriangle className="h-4 w-4 text-red-600 shrink-0" />
           </div>
-          <div className="text-xl font-extrabold text-red-600">{lowStockMeds.length} <span className="text-xs font-normal text-slate-500">items</span></div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Below custom alert threshold</div>
+          <div className="text-xl font-extrabold text-red-600 truncate">{lowStockMeds.length} <span className="text-xs font-normal text-slate-500">items</span></div>
+          <div className="text-[11px] text-slate-500 mt-0.5 truncate">Below custom alert threshold</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs min-w-0">
           <div className="flex items-center justify-between text-slate-500 mb-1">
-            <span className="text-xs font-semibold uppercase">Expiring ≤ 3 Months</span>
-            <Clock className="h-4 w-4 text-amber-600" />
+            <span className="text-xs font-semibold uppercase tracking-wider">Expiring ≤ 3 Months</span>
+            <Clock className="h-4 w-4 text-amber-600 shrink-0" />
           </div>
-          <div className="text-xl font-extrabold text-amber-600">
+          <div className="text-xl font-extrabold text-amber-600 truncate">
             {exp1MonthMeds.length + exp3MonthsMeds.length + expiredMeds.length} <span className="text-xs font-normal text-slate-500">items</span>
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">{exp1MonthMeds.length} critical (&lt;1 Mo) | {expiredMeds.length} expired</div>
+          <div className="text-[11px] text-slate-500 mt-0.5 truncate">{exp1MonthMeds.length} critical (&lt;1 Mo) | {expiredMeds.length} expired</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs min-w-0">
           <div className="flex items-center justify-between text-slate-500 mb-1">
-            <span className="text-xs font-semibold uppercase">Stock Valuation</span>
-            <DollarSign className="h-4 w-4 text-emerald-600" />
+            <span className="text-xs font-semibold uppercase tracking-wider">Stock Valuation</span>
+            <DollarSign className="h-4 w-4 text-emerald-600 shrink-0" />
           </div>
-          <div className="text-xl font-extrabold text-teal-700">₹{totalRetailValuation.toFixed(2)}</div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Est. Retail / Dispense value</div>
+          <div className="text-xl font-extrabold text-teal-700 truncate">₹{totalRetailValuation.toFixed(2)}</div>
+          <div className="text-[11px] text-slate-500 mt-0.5 truncate">Est. Retail / Dispense value</div>
         </div>
       </div>
 
       {/* ─── DAILY STOCK & EXPIRY ALERTS HUB (VIEW MODULE) ─── */}
-      <div className="bg-gradient-to-r from-navy-900 via-slate-900 to-teal-950 text-white rounded-2xl p-5 shadow-md">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 bg-teal-500/20 text-teal-300 border border-teal-500/30 px-3 py-1 rounded-full text-xs font-bold mb-2">
-              <Bell className="h-3.5 w-3.5 animate-pulse" />
+      <div className="bg-gradient-to-r from-navy-900 via-slate-900 to-teal-950 text-white rounded-2xl p-4 sm:p-6 shadow-md overflow-hidden">
+        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
+          <div className="space-y-1.5 min-w-0 flex-1">
+            <div className="inline-flex items-center gap-2 bg-teal-500/20 text-teal-300 border border-teal-500/30 px-3 py-1 rounded-full text-xs font-bold mb-1">
+              <Bell className="h-3.5 w-3.5 animate-pulse shrink-0" />
               <span>Daily Automated Alert System • Active</span>
             </div>
-            <h3 className="text-lg font-bold">Stock &amp; Multi-Tier Expiry Intelligence Center</h3>
-            <p className="text-xs text-slate-300 mt-0.5">
+            <h3 className="text-base sm:text-lg font-bold">Stock &amp; Multi-Tier Expiry Intelligence Center</h3>
+            <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
               Daily automated alerts for <strong className="text-white">Low Stock</strong> and <strong className="text-white">1 Year, 6 Months, 3 Months &amp; 1 Month</strong> Expiry timelines.
             </p>
-            <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-slate-400">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-slate-400">
               <span>📧 Registered Email: <strong className="text-teal-300">{registeredEmail}</strong></span>
               <span>📱 WhatsApp: <strong className="text-teal-300">{registeredPhone}</strong></span>
               <span>⏰ Frequency: <strong className="text-white">Daily (09:00 AM)</strong></span>
@@ -526,11 +526,11 @@ export const PharmacyInventory = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2.5 shrink-0 w-full lg:w-auto">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full xl:w-auto shrink-0 pt-2 xl:pt-0">
             {/* One-Click Excel Download */}
             <button
               onClick={handleDownloadInventoryExcel}
-              className="flex-1 lg:flex-none flex items-center justify-center space-x-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm"
+              className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm whitespace-nowrap"
               title="Download total stock details into Excel format (.csv)"
             >
               <Download className="h-4 w-4 shrink-0" />
@@ -540,7 +540,7 @@ export const PharmacyInventory = () => {
             {/* Daily WhatsApp Alert */}
             <button
               onClick={handleSendWhatsAppAlert}
-              className="flex-1 lg:flex-none flex items-center justify-center space-x-1.5 bg-[#25D366] hover:bg-[#1DA851] text-white px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm"
+              className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 bg-[#25D366] hover:bg-[#1DA851] text-white px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm whitespace-nowrap"
               title="Dispatch daily stock & expiry report to registered WhatsApp"
             >
               <Smartphone className="h-4 w-4 shrink-0" />
@@ -550,7 +550,7 @@ export const PharmacyInventory = () => {
             {/* Daily Email Alert */}
             <button
               onClick={() => setShowEmailModal(true)}
-              className="flex-1 lg:flex-none flex items-center justify-center space-x-1.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+              className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap"
               title="Preview and send daily alert digest to registered email"
             >
               <Mail className="h-4 w-4 shrink-0" />
@@ -560,108 +560,106 @@ export const PharmacyInventory = () => {
         </div>
 
         {/* Expiry Tiers Visual Radar */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 mt-4 pt-4 border-t border-white/10 text-center">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2 mt-4 pt-4 border-t border-white/10 text-center">
           <button
             onClick={() => setAlertFilter(alertFilter === '1month' ? 'all' : '1month')}
-            className={`p-2 rounded-xl text-xs transition-all ${
+            className={`p-2.5 rounded-xl text-xs transition-all ${
               alertFilter === '1month' ? 'bg-rose-500 text-white font-bold ring-2 ring-rose-300' : 'bg-white/5 hover:bg-white/10 text-rose-300'
             }`}
           >
             <div className="text-base font-extrabold">{exp1MonthMeds.length}</div>
-            <div className="text-[10px]">&lt; 1 Month</div>
+            <div className="text-[10px] truncate">&lt; 1 Month</div>
           </button>
 
           <button
             onClick={() => setAlertFilter(alertFilter === '3months' ? 'all' : '3months')}
-            className={`p-2 rounded-xl text-xs transition-all ${
+            className={`p-2.5 rounded-xl text-xs transition-all ${
               alertFilter === '3months' ? 'bg-amber-500 text-white font-bold ring-2 ring-amber-300' : 'bg-white/5 hover:bg-white/10 text-amber-300'
             }`}
           >
             <div className="text-base font-extrabold">{exp3MonthsMeds.length}</div>
-            <div className="text-[10px]">&lt; 3 Months</div>
+            <div className="text-[10px] truncate">&lt; 3 Months</div>
           </button>
 
           <button
             onClick={() => setAlertFilter(alertFilter === '6months' ? 'all' : '6months')}
-            className={`p-2 rounded-xl text-xs transition-all ${
+            className={`p-2.5 rounded-xl text-xs transition-all ${
               alertFilter === '6months' ? 'bg-yellow-500 text-white font-bold ring-2 ring-yellow-300' : 'bg-white/5 hover:bg-white/10 text-yellow-300'
             }`}
           >
             <div className="text-base font-extrabold">{exp6MonthsMeds.length}</div>
-            <div className="text-[10px]">&lt; 6 Months</div>
+            <div className="text-[10px] truncate">&lt; 6 Months</div>
           </button>
 
           <button
             onClick={() => setAlertFilter(alertFilter === '1year' ? 'all' : '1year')}
-            className={`p-2 rounded-xl text-xs transition-all ${
+            className={`p-2.5 rounded-xl text-xs transition-all ${
               alertFilter === '1year' ? 'bg-blue-500 text-white font-bold ring-2 ring-blue-300' : 'bg-white/5 hover:bg-white/10 text-blue-300'
             }`}
           >
             <div className="text-base font-extrabold">{exp1YearMeds.length}</div>
-            <div className="text-[10px]">&lt; 1 Year</div>
+            <div className="text-[10px] truncate">&lt; 1 Year</div>
           </button>
 
           <button
             onClick={() => setAlertFilter(alertFilter === 'low_stock' ? 'all' : 'low_stock')}
-            className={`p-2 rounded-xl text-xs transition-all ${
+            className={`p-2.5 rounded-xl text-xs transition-all ${
               alertFilter === 'low_stock' ? 'bg-red-500 text-white font-bold ring-2 ring-red-300' : 'bg-white/5 hover:bg-white/10 text-red-300'
             }`}
           >
             <div className="text-base font-extrabold">{lowStockMeds.length}</div>
-            <div className="text-[10px]">Low Stock</div>
+            <div className="text-[10px] truncate">Low Stock</div>
           </button>
 
           <button
             onClick={() => setAlertFilter(alertFilter === 'expired' ? 'all' : 'expired')}
-            className={`p-2 rounded-xl text-xs transition-all ${
+            className={`p-2.5 rounded-xl text-xs transition-all ${
               alertFilter === 'expired' ? 'bg-red-700 text-white font-bold ring-2 ring-red-400' : 'bg-white/5 hover:bg-white/10 text-red-400'
             }`}
           >
             <div className="text-base font-extrabold">{expiredMeds.length}</div>
-            <div className="text-[10px]">Expired</div>
+            <div className="text-[10px] truncate">Expired</div>
           </button>
         </div>
       </div>
 
       {/* ─── TOOLBAR: FILTERS, SEARCH & ACTIONS ─── */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        {/* Search Input */}
-        <div className="relative w-full sm:w-64">
-          <Search className="h-4 w-4 text-slate-400 absolute left-3 top-3" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search medicine, batch..."
-            className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-teal-500 bg-white"
-          />
+      <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3">
+        {/* Search Input & Add Button */}
+        <div className="flex items-center gap-2.5 flex-1">
+          <div className="relative flex-1 sm:max-w-xs">
+            <Search className="h-4 w-4 text-slate-400 absolute left-3 top-2.5" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search medicine, batch..."
+              className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-teal-500 bg-white"
+            />
+          </div>
+
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center space-x-1.5 bg-teal-600 hover:bg-teal-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-colors shadow-sm shrink-0 whitespace-nowrap"
+          >
+            <PlusCircle className="h-4 w-4" />
+            <span>Add Medicine</span>
+          </button>
         </div>
 
         {/* Category Pill Filters */}
-        <div className="flex space-x-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+        <div className="flex space-x-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-thin max-w-full">
           {categories.map(cat => (
             <button
               key={cat}
               onClick={() => setCategoryFilter(cat)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors shrink-0 ${
                 categoryFilter === cat ? 'bg-navy-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
               }`}
             >
               {cat}
             </button>
           ))}
-        </div>
-
-        {/* Action Controls */}
-        <div className="flex items-center space-x-2 shrink-0">
-          {/* Add Medicine Button */}
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center space-x-2 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors shadow-sm"
-          >
-            <PlusCircle className="h-4 w-4" />
-            <span>Add Medicine</span>
-          </button>
         </div>
       </div>
 
@@ -679,9 +677,9 @@ export const PharmacyInventory = () => {
       )}
 
       {/* ─── MEDICINES INVENTORY TABLE ─── */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden w-full">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-sm text-left min-w-[760px]">
             <thead className="text-xs text-slate-500 bg-slate-50 uppercase tracking-wider border-b border-slate-200">
               <tr>
                 <th className="px-5 py-3.5">Medicine &amp; Batch</th>

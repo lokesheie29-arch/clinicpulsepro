@@ -140,7 +140,7 @@ export const Simulator = () => {
   const orgMeta = getOrgMeta();
 
   return (
-    <div id="demo" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 print:py-0 print:px-0">
+    <div id="demo" className="w-full scroll-mt-24 py-4 md:py-6 print:py-0 print:px-0">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4 print:hidden">
         <div>
           <div className="inline-flex items-center gap-2 mb-2">
@@ -152,8 +152,8 @@ export const Simulator = () => {
               {showAllModules ? '(All Modules View)' : `(${visibleTabs.length} Tailored Modules)`}
             </span>
           </div>
-          <h2 className="text-3xl font-bold text-navy-900">Live Healthcare ERP Simulator</h2>
-          <p className="text-slate-600 text-sm mt-1">
+          <h2 className="text-2xl sm:text-3xl font-bold text-navy-900">Live Healthcare ERP Simulator</h2>
+          <p className="text-slate-600 text-xs sm:text-sm mt-1">
             Tailored operations workflow based on your organization type.
           </p>
         </div>
@@ -165,7 +165,7 @@ export const Simulator = () => {
             title="Toggle between organization-specific modules and the full ERP suite"
           >
             <SlidersHorizontal className="h-3.5 w-3.5 text-teal-600" />
-            <span>{showAllModules ? 'Filter by Org Type' : 'Show All Modules (5)'}</span>
+            <span>{showAllModules ? 'Filter by Org Type' : `Show All Modules (${allTabs.length})`}</span>
           </button>
 
           <button 
@@ -178,9 +178,9 @@ export const Simulator = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 print:border-none print:shadow-none print:rounded-none">
-        <div className="flex flex-col md:flex-row">
-          <div className="flex flex-col md:w-64 shrink-0 border-b md:border-b-0 md:border-r border-slate-200 bg-slate-50/50 print:hidden divide-y divide-slate-200">
+      <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 print:border-none print:shadow-none print:rounded-none w-full">
+        <div className="flex flex-col md:flex-row min-w-0">
+          <div className="flex flex-col md:w-56 lg:w-64 shrink-0 border-b md:border-b-0 md:border-r border-slate-200 bg-slate-50/50 print:hidden divide-y divide-slate-200">
             {visibleTabs.map(tab => (
               <TabButton
                 key={tab.id}
@@ -193,7 +193,7 @@ export const Simulator = () => {
             ))}
           </div>
           
-          <div className="flex-1 p-6 md:p-8 min-h-[600px] bg-slate-50/30 print:p-0 print:bg-white print:min-h-0">
+          <div className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 min-h-[600px] bg-slate-50/30 print:p-0 print:bg-white print:min-h-0 overflow-hidden">
             {renderTab()}
           </div>
         </div>
@@ -207,14 +207,14 @@ const TabButton = ({ id, active, setActive, icon, label }: any) => {
   return (
     <button
       onClick={() => setActive(id)}
-      className={`flex items-center space-x-3 px-6 py-4 font-medium text-sm w-full transition-all border-l-4 ${
+      className={`flex items-center space-x-3 px-4 lg:px-6 py-3.5 sm:py-4 font-medium text-xs sm:text-sm w-full transition-all border-l-4 text-left ${
         isActive 
           ? 'border-teal-600 text-teal-700 bg-white shadow-xs' 
           : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
       }`}
     >
-      {icon}
-      <span>{label}</span>
+      <div className="shrink-0">{icon}</div>
+      <span className="truncate">{label}</span>
     </button>
   );
 };

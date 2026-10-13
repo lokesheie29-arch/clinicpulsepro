@@ -87,7 +87,7 @@ const AppContent = () => {
   const clinicName = (user?.unsafeMetadata?.clinicName as string) || 'ClinicPulse Pro Center';
 
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-slate-50">
+    <div className="min-h-screen flex flex-col font-sans bg-slate-50 overflow-x-hidden">
       <Navbar
         onAdminClick={() => setShowAdmin(!showAdmin)}
         onProfileClick={() => setShowProfileModal(true)}
@@ -105,7 +105,7 @@ const AppContent = () => {
       <main className="flex-grow">
         {/* If signed in and NOT toggling public website preview: Go STRAIGHT to Clinic Modules */}
         {isSignedIn && !showLandingPage ? (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12">
+          <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
             {/* Staff Welcome & Clinic Info Header */}
             <div className="bg-gradient-to-r from-navy-900 via-navy-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg mb-8 relative overflow-hidden">
               <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-teal-500/10 skew-x-12 pointer-events-none" />
@@ -191,7 +191,9 @@ const AppContent = () => {
           /* When signed out or explicitly previewing public website: Show Landing Page */
           <>
             <LandingPage />
-            <Simulator />
+            <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+              <Simulator />
+            </div>
           </>
         )}
       </main>
