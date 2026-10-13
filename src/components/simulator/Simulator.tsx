@@ -8,13 +8,15 @@ import {
   Microscope,
   Building2,
   SlidersHorizontal,
-  Check
+  Check,
+  ShoppingCart
 } from 'lucide-react';
 import { OpdConsultation } from './OpdConsultation';
 import { InvoiceHub } from './InvoiceHub';
 import { PharmacyInventory } from './PharmacyInventory';
 import { Analytics } from './Analytics';
 import { LabDiagnostics } from './LabDiagnostics';
+import { ProcurementHub } from '../procurement/ProcurementHub';
 import { useAppState } from '../../context/AppStateContext';
 
 export const Simulator = () => {
@@ -33,11 +35,11 @@ export const Simulator = () => {
   // Sync default tab when orgType switches
   useEffect(() => {
     if (!showAllModules) {
-      if (orgType === 'laboratory' && !['lab', 'invoice', 'analytics'].includes(activeTab)) {
+      if (orgType === 'laboratory' && !['lab', 'invoice', 'analytics', 'procurement'].includes(activeTab)) {
         setActiveTab('lab');
-      } else if (orgType === 'pharmacy' && !['pharmacy', 'invoice', 'analytics'].includes(activeTab)) {
+      } else if (orgType === 'pharmacy' && !['pharmacy', 'invoice', 'analytics', 'procurement'].includes(activeTab)) {
         setActiveTab('pharmacy');
-      } else if (orgType === 'hospital' && !['opd', 'lab', 'invoice', 'pharmacy', 'analytics'].includes(activeTab)) {
+      } else if (orgType === 'hospital' && !['opd', 'lab', 'invoice', 'pharmacy', 'analytics', 'procurement'].includes(activeTab)) {
         setActiveTab('opd');
       }
     }
@@ -55,6 +57,7 @@ export const Simulator = () => {
       case 'invoice': return <InvoiceHub selectedInvoiceId={selectedInvoiceId} />;
       case 'pharmacy': return <PharmacyInventory />;
       case 'analytics': return <Analytics />;
+      case 'procurement': return <ProcurementHub />;
       default: return <OpdConsultation onComplete={handleInvoiceGenerated} />;
     }
   };
@@ -95,6 +98,14 @@ export const Simulator = () => {
         ? '3. Financial Analytics'
         : '5. Financial Analytics',
       icon: <BarChart3 className="h-5 w-5" />,
+      types: ['hospital', 'laboratory', 'pharmacy']
+    },
+    {
+      id: 'procurement',
+      label: (!showAllModules && (orgType === 'laboratory' || orgType === 'pharmacy'))
+        ? '4. Purchase & Procurement'
+        : '6. Purchase & Procurement',
+      icon: <ShoppingCart className="h-5 w-5" />,
       types: ['hospital', 'laboratory', 'pharmacy']
     }
   ];

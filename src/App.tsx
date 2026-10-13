@@ -9,6 +9,7 @@ import { DataImportWizard } from './components/DataImportWizard';
 import { OrgTypeSelectionModal } from './components/OrgTypeSelectionModal';
 import { LegalModal, LegalTab } from './components/LegalModal';
 import { AppStateProvider, useAppState } from './context/AppStateContext';
+import { ProcurementProvider } from './context/ProcurementContext';
 import {
   Building2,
   UserCircle2,
@@ -234,7 +235,9 @@ const AppContent = () => {
 function App() {
   return (
     <AppStateProvider>
-      <AppContent />
+      <ProcurementProvider>
+        <AppContent />
+      </ProcurementProvider>
     </AppStateProvider>
   );
 }
