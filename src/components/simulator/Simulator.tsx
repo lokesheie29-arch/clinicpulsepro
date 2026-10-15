@@ -9,7 +9,8 @@ import {
   Building2,
   SlidersHorizontal,
   Check,
-  ShoppingCart
+  ShoppingCart,
+  CreditCard
 } from 'lucide-react';
 import { OpdConsultation } from './OpdConsultation';
 import { InvoiceHub } from './InvoiceHub';
@@ -17,6 +18,7 @@ import { PharmacyInventory } from './PharmacyInventory';
 import { Analytics } from './Analytics';
 import { LabDiagnostics } from './LabDiagnostics';
 import { ProcurementHub } from '../procurement/ProcurementHub';
+import { PaymentHub } from '../payments/PaymentHub';
 import { useAppState } from '../../context/AppStateContext';
 
 export const Simulator = () => {
@@ -35,11 +37,11 @@ export const Simulator = () => {
   // Sync default tab when orgType switches
   useEffect(() => {
     if (!showAllModules) {
-      if (orgType === 'laboratory' && !['lab', 'invoice', 'analytics', 'procurement'].includes(activeTab)) {
+      if (orgType === 'laboratory' && !['lab', 'invoice', 'payments', 'analytics', 'procurement'].includes(activeTab)) {
         setActiveTab('lab');
-      } else if (orgType === 'pharmacy' && !['pharmacy', 'invoice', 'analytics', 'procurement'].includes(activeTab)) {
+      } else if (orgType === 'pharmacy' && !['pharmacy', 'invoice', 'payments', 'analytics', 'procurement'].includes(activeTab)) {
         setActiveTab('pharmacy');
-      } else if (orgType === 'hospital' && !['opd', 'lab', 'invoice', 'pharmacy', 'analytics', 'procurement'].includes(activeTab)) {
+      } else if (orgType === 'hospital' && !['opd', 'lab', 'invoice', 'pharmacy', 'payments', 'analytics', 'procurement'].includes(activeTab)) {
         setActiveTab('opd');
       }
     }
@@ -56,6 +58,7 @@ export const Simulator = () => {
       case 'lab': return <LabDiagnostics onSwitchTab={setActiveTab} />;
       case 'invoice': return <InvoiceHub selectedInvoiceId={selectedInvoiceId} />;
       case 'pharmacy': return <PharmacyInventory />;
+      case 'payments': return <PaymentHub />;
       case 'analytics': return <Analytics />;
       case 'procurement': return <ProcurementHub />;
       default: return <OpdConsultation onComplete={handleInvoiceGenerated} />;
@@ -93,18 +96,26 @@ export const Simulator = () => {
       types: ['hospital', 'pharmacy']
     },
     {
+      id: 'payments',
+      label: (!showAllModules && (orgType === 'laboratory' || orgType === 'pharmacy'))
+        ? '3. Payments & UPI Banking'
+        : '5. Payments & UPI Banking',
+      icon: <CreditCard className="h-5 w-5" />,
+      types: ['hospital', 'laboratory', 'pharmacy']
+    },
+    {
       id: 'analytics',
       label: (!showAllModules && (orgType === 'laboratory' || orgType === 'pharmacy'))
-        ? '3. Financial Analytics'
-        : '5. Financial Analytics',
+        ? '4. Financial Analytics'
+        : '6. Financial Analytics',
       icon: <BarChart3 className="h-5 w-5" />,
       types: ['hospital', 'laboratory', 'pharmacy']
     },
     {
       id: 'procurement',
       label: (!showAllModules && (orgType === 'laboratory' || orgType === 'pharmacy'))
-        ? '4. Purchase & Procurement'
-        : '6. Purchase & Procurement',
+        ? '5. Purchase & Procurement'
+        : '7. Purchase & Procurement',
       icon: <ShoppingCart className="h-5 w-5" />,
       types: ['hospital', 'laboratory', 'pharmacy']
     }

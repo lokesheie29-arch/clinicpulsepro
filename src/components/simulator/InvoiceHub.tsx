@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
-import { Printer, Smartphone, CheckCircle, Download, Send, AlertCircle, Loader2 } from 'lucide-react';
+import { Printer, Smartphone, CheckCircle, Download, Send, AlertCircle, Loader2, CreditCard, QrCode, Landmark, ShieldCheck, X } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
+import { usePayment } from '../../context/PaymentContext';
+import { PatientPaymentPortal } from '../payments/PatientPaymentPortal';
 import { doctors } from '../../data/mockData';
 import confetti from 'canvas-confetti';
 import { useUser } from '@clerk/react';
@@ -32,9 +34,11 @@ function numberToWords(num: number): string {
 
 export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | null }) => {
   const { invoices, updateInvoicePaymentStatus, orgType } = useAppState();
+  const { activeConfig, transactions } = usePayment();
   const { user } = useUser();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const isPharmacy = orgType === 'pharmacy';
 
@@ -108,8 +112,10 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
   const billDateTime = billDate.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
     '  ' + billDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase();
 
-  const vpa = "clinicpulse@upi";
-  const upiString = `upi://pay?pa=${vpa}&pn=ClinicPulse&am=${invoice.totalAmount.toFixed(2)}&cu=INR&tn=Invoice-${invoice.id}`;
+  const invoiceTxn = transactions.find(t => t.invoiceId === invoice.id && t.status === 'success');
+  const vpa = activeConfig?.merchantVpa || "clinicpulse@upi";
+  const merchantName = activeConfig?.merchantName || hospitalName;
+  const upiString = `upi://pay?pa=${vpa}&pn=${encodeURIComponent(merchantName)}&am=${invoice.totalAmount.toFixed(2)}&cu=INR&tn=Invoice-${invoice.id}&tr=${invoice.id}`;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiString)}`;
 
   // 1. Send Payment Link via WhatsApp
@@ -519,6 +525,31 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
             Automated Patient WhatsApp Actions
           </h4>
 
+          {/* 0. Direct Payment Gateway / UPI Pay Button */}
+          <button
+            onClick={() => setShowPaymentModal(true)}
+            className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-teal-600 via-teal-700 to-navy-900 hover:from-teal-700 hover:to-navy-800 text-white px-4 py-3 rounded-lg font-semibold transition-all shadow-md group"
+          >
+            <CreditCard className="h-5 w-5 text-teal-300 shrink-0 group-hover:scale-105 transition-transform" />
+            <span>
+              {invoice.paymentStatus === 'Paid' ? 'View Payment Gateway Slip' : 'Pay via UPI / Payment Gateway'}
+            </span>
+          </button>
+
+          {/* Verified Settlement Badge if Paid */}
+          {invoiceTxn && (
+            <div className="bg-teal-50/70 border border-teal-200 rounded-lg p-2.5 text-xs text-teal-900 space-y-1">
+              <div className="flex items-center gap-1 font-bold text-teal-800">
+                <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                <span>Verified Direct Bank Settlement</span>
+              </div>
+              <div className="text-[11px] font-mono text-teal-700">Txn Ref: {invoiceTxn.id}</div>
+              <div className="text-[10px] text-teal-600">
+                Settles to: <strong>{invoiceTxn.bankAccountMasked || activeConfig?.bankAccount.bankName}</strong> ({activeConfig?.settlementCycle} Cycle)
+              </div>
+            </div>
+          )}
+
           {/* 1. Send Payment Link */}
           <button
             onClick={handleSendPaymentLink}
@@ -593,6 +624,34 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
           </div>
         </div>
       </div>
+
+      {/* Online UPI & Payment Gateway Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-100 p-6 relative animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-teal-600" />
+                <h3 className="font-bold text-navy-900 text-base">Direct Payment Collection Terminal</h3>
+              </div>
+              <button 
+                onClick={() => setShowPaymentModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <PatientPaymentPortal 
+              initialInvoiceId={invoice.id} 
+              onPaymentSuccess={() => {
+                setStatusMessage('Payment verified! Invoice status updated to Paid.');
+                setTimeout(() => setShowPaymentModal(false), 1500);
+              }} 
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

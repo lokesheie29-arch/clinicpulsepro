@@ -10,6 +10,7 @@ import { OrgTypeSelectionModal } from './components/OrgTypeSelectionModal';
 import { LegalModal, LegalTab } from './components/LegalModal';
 import { AppStateProvider, useAppState } from './context/AppStateContext';
 import { ProcurementProvider } from './context/ProcurementContext';
+import { PaymentProvider } from './context/PaymentContext';
 import {
   Building2,
   UserCircle2,
@@ -237,9 +238,11 @@ const AppContent = () => {
 function App() {
   return (
     <AppStateProvider>
-      <ProcurementProvider>
-        <AppContent />
-      </ProcurementProvider>
+      <PaymentProvider>
+        <ProcurementProvider>
+          <AppContent />
+        </ProcurementProvider>
+      </PaymentProvider>
     </AppStateProvider>
   );
 }
