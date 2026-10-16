@@ -1,9 +1,14 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Printer, Smartphone, CheckCircle, Download, Send, AlertCircle, Loader2, CreditCard, QrCode, Landmark, ShieldCheck, X, Receipt, Plus } from 'lucide-react';
+import { 
+  Printer, Smartphone, CheckCircle, Download, Send, AlertCircle, 
+  Loader2, CreditCard, QrCode, Landmark, ShieldCheck, X, Receipt, 
+  Plus, Paperclip, Copy, Check, FileText, Share2 
+} from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
 import { usePayment } from '../../context/PaymentContext';
 import { PatientPaymentPortal } from '../payments/PatientPaymentPortal';
 import { doctors } from '../../data/mockData';
+import { getBillShareUrl } from '../../lib/invoiceShare';
 import confetti from 'canvas-confetti';
 import { useUser } from '@clerk/react';
 import html2canvas from 'html2canvas';
@@ -46,6 +51,10 @@ export const InvoiceHub = ({
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showWhatsAppHelper, setShowWhatsAppHelper] = useState(false);
+  const [lastGeneratedPdfName, setLastGeneratedPdfName] = useState('');
+  const [lastBillUrl, setLastBillUrl] = useState('');
+  const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
     if (selectedInvoiceId) {
@@ -149,7 +158,8 @@ export const InvoiceHub = ({
     }).join('%0A');
     const discountLine = totalDiscount > 0 ? `%0A*Discount Saved:* -₹${totalDiscount.toFixed(2)}%0A` : '';
     const docDisplay = invoice.prescribedByDoctorName || doctor?.name || 'General / Direct';
-    const waText = `*${isPharmacy ? 'Pharmacy Tax Invoice' : 'Medical Tax Invoice'} %26 Payment Link - Bill %23${invoice.id}*%0A%0AHello *${invoice.patient.name}*,%0AYour medical bill has been generated at *${hospitalName}*.%0A%0A*Bill No:* ${invoice.id}%0A*${isPharmacy ? 'Prescribed By' : 'Doctor'}:* ${docDisplay}%0A*Total Amount Due:* ₹${invoice.totalAmount.toFixed(2)}${discountLine}%0A*Payment Status:* PENDING PAYMENT%0A%0A*Payment Link (Instant UPI):*%0A${encodeURIComponent(upiString)}%0A%0A*Medicines Prescribed:*%0A${medSummary}%0A%0APlease pay using the UPI link above. Once payment is confirmed, your official PDF bill will be generated and dispatched automatically!%0A%0A*** WISH YOU A SPEEDY RECOVERY ***`;
+    const billLink = getBillShareUrl(invoice, hospitalName);
+    const waText = `*${isPharmacy ? 'Pharmacy Tax Invoice' : 'Medical Tax Invoice'} %26 Payment Link - Bill %23${invoice.id}*%0A%0AHello *${invoice.patient.name}*,%0AYour medical bill has been generated at *${hospitalName}*.%0A%0A*Bill No:* ${invoice.id}%0A*${isPharmacy ? 'Prescribed By' : 'Doctor'}:* ${docDisplay}%0A*Total Amount Due:* ₹${invoice.totalAmount.toFixed(2)}${discountLine}%0A*Payment Status:* PENDING PAYMENT%0A%0A*Payment Link (Instant UPI):*%0A${encodeURIComponent(upiString)}%0A%0A📄 *View & Verify Bill Online:*%0A${encodeURIComponent(billLink)}%0A%0A*Medicines Prescribed:*%0A${medSummary}%0A%0APlease pay using the UPI link above. Once payment is confirmed, your official PDF bill will be generated and dispatched automatically!%0A%0A*** WISH YOU A SPEEDY RECOVERY ***`;
 
     window.open(`https://wa.me/91${cleanPhone}?text=${waText}`, '_blank');
     setStatusMessage('Payment link dispatched to patient WhatsApp!');
@@ -199,11 +209,19 @@ export const InvoiceHub = ({
 
       // Step C: Generate & download PDF
       const pdfResult = await generatePdfBlob();
-      if (pdfResult) {
-        pdfResult.pdf.save(pdfResult.filename);
+      if (!pdfResult) {
+        throw new Error('Failed to render printable bill canvas');
       }
 
-      // Step D: Automatically open WhatsApp with Payment Confirmation & PDF alert
+      // Save PDF locally
+      pdfResult.pdf.save(pdfResult.filename);
+      setLastGeneratedPdfName(pdfResult.filename);
+
+      // Generate direct online bill link with embedded data
+      const billLink = getBillShareUrl(invoice, hospitalName);
+      setLastBillUrl(billLink);
+
+      // Step D: Format WhatsApp text with Direct 1-Click PDF Link
       const cleanPhone = invoice.patient.phone.replace(/\D/g, '');
       const medList = invoice.prescriptionItems.map(p => {
         const discStr = (p.discountPercent && p.discountPercent > 0) ? ` [${p.discountPercent}% Off]` : '';
@@ -211,10 +229,33 @@ export const InvoiceHub = ({
       }).join('%0A');
       const discountLine = totalDiscount > 0 ? `%0A- Discount Saved: -₹${totalDiscount.toFixed(2)} (Applied)` : '';
       const docDisplay = invoice.prescribedByDoctorName || doctor?.name || 'General / Direct';
-      const paidWaText = `*${hospitalName} - Payment Confirmation %26 Official Tax Invoice*%0A%0AHello *${invoice.patient.name}*,%0AThank you! We have received your payment of *₹${invoice.totalAmount.toFixed(2)}* for Bill *%23${invoice.id}* (Status: *PAID ✓*).%0A%0A*Receipt Details:*%0A- Bill No: ${invoice.id}%0A- Date %26 Time: ${billDateTime}%0A- ${isPharmacy ? 'Prescribed By' : 'Doctor'}: ${docDisplay}%0A- Total Paid: ₹${invoice.totalAmount.toFixed(2)}${discountLine}%0A- Payment Status: PAID ✓%0A%0A*Items / Medicines:*%0A${medList}%0A%0AYour official GST Tax Invoice PDF has been generated and saved.%0AThank you for choosing ${hospitalName}!%0A%0A*** WISH YOU A SPEEDY RECOVERY ***`;
+      const paidWaText = `*${hospitalName} - Payment Confirmation %26 Official Tax Invoice*%0A%0AHello *${invoice.patient.name}*,%0AThank you! We have received your payment of *₹${invoice.totalAmount.toFixed(2)}* for Bill *%23${invoice.id}* (Status: *PAID ✓*).%0A%0A*Receipt Details:*%0A- Bill No: ${invoice.id}%0A- Date %26 Time: ${billDateTime}%0A- ${isPharmacy ? 'Prescribed By' : 'Doctor'}: ${docDisplay}%0A- Total Paid: ₹${invoice.totalAmount.toFixed(2)}${discountLine}%0A- Payment Status: PAID ✓%0A%0A*Items / Medicines:*%0A${medList}%0A%0A📄 *Download / View Official PDF Tax Invoice:*%0A${encodeURIComponent(billLink)}%0A%0AOfficial PDF document generated & saved.%0AThank you for choosing ${hospitalName}!%0A%0A*** WISH YOU A SPEEDY RECOVERY ***`;
 
-      window.open(`https://wa.me/91${cleanPhone}?text=${paidWaText}`, '_blank');
-      setStatusMessage('Payment verified! Official PDF tax invoice downloaded & sent to patient WhatsApp.');
+      // Step E: Try native Web Share with the actual PDF document file (Mobile Chrome, Safari, etc.)
+      let fileSharedNatively = false;
+      const pdfBlob = pdfResult.pdf.output('blob');
+      const pdfFile = new File([pdfBlob], pdfResult.filename, { type: 'application/pdf' });
+
+      if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+        try {
+          await navigator.share({
+            files: [pdfFile],
+            title: `${hospitalName} - Bill #${invoice.id} Official Tax Invoice`,
+            text: `Payment Confirmation & Official Tax Invoice for ${invoice.patient.name} (Bill #${invoice.id}).\nDirect Bill Link: ${billLink}`
+          });
+          fileSharedNatively = true;
+          setStatusMessage('Official PDF Document attached and dispatched successfully via WhatsApp / Device Share!');
+        } catch (shareErr) {
+          console.log('Native share dismissed or unavailable, falling back to WhatsApp Web link:', shareErr);
+        }
+      }
+
+      // Step F: If not shared via native file share (e.g. desktop browser), open WhatsApp Web with direct link & show helper modal
+      if (!fileSharedNatively) {
+        window.open(`https://wa.me/91${cleanPhone}?text=${paidWaText}`, '_blank');
+        setShowWhatsAppHelper(true);
+        setStatusMessage('Payment verified! Official PDF downloaded & WhatsApp opened with 1-click PDF download link.');
+      }
     } catch (err) {
       console.error('Failed to process payment and PDF:', err);
       setStatusMessage('Payment status updated to Paid.');
@@ -694,6 +735,99 @@ export const InvoiceHub = ({
                 setTimeout(() => setShowPaymentModal(false), 1500);
               }} 
             />
+          </div>
+        </div>
+      )}
+
+      {/* ─── WhatsApp PDF Dispatch Helper Modal ─── */}
+      {showWhatsAppHelper && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-slate-200 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-[#25D366]/10 text-[#25D366] flex items-center justify-center shrink-0 border border-[#25D366]/20">
+                  <Smartphone className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-navy-900">
+                    WhatsApp Opened &amp; PDF Downloaded
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Bill #{invoice.id} • {invoice.patient.name} (₹{invoice.totalAmount.toFixed(2)})
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowWhatsAppHelper(false)}
+                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 text-xs">
+              <div className="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-200 text-emerald-900 space-y-1.5">
+                <div className="flex items-center gap-2 font-bold text-emerald-800">
+                  <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Direct 1-Click PDF Link Included in Message</span>
+                </div>
+                <p className="text-[11px] text-emerald-700 leading-relaxed">
+                  Your WhatsApp message already contains the official direct link for the patient to view and download their official PDF tax invoice immediately on their smartphone!
+                </p>
+              </div>
+
+              <div className="p-3.5 bg-blue-50 rounded-2xl border border-blue-200 text-blue-900 space-y-2">
+                <div className="flex items-center gap-2 font-bold text-blue-800">
+                  <Paperclip className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span>To Send the PDF File directly in WhatsApp Web:</span>
+                </div>
+                <p className="text-[11px] text-blue-700 leading-relaxed">
+                  The PDF <strong>"{lastGeneratedPdfName || `${invoice.id}_Bill.pdf`}"</strong> was automatically downloaded to your computer's <strong>Downloads</strong> folder.
+                </p>
+                <ol className="list-decimal list-inside space-y-1 text-[11px] text-blue-800 font-medium pl-1">
+                  <li>In the WhatsApp Web chat tab that opened, click the <strong>📎 (Paperclip)</strong> icon at the bottom.</li>
+                  <li>Click <strong>Document</strong>.</li>
+                  <li>Select <strong>{lastGeneratedPdfName || `${invoice.id}_Bill.pdf`}</strong> and press Send!</li>
+                </ol>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
+              <button
+                onClick={() => {
+                  const cleanPhone = invoice.patient.phone.replace(/\D/g, '');
+                  const docDisplay = invoice.prescribedByDoctorName || doctor?.name || 'General / Direct';
+                  const paidWaText = `*${hospitalName} - Payment Confirmation %26 Official Tax Invoice*%0A%0AHello *${invoice.patient.name}*,%0AThank you! We have received your payment of *₹${invoice.totalAmount.toFixed(2)}* for Bill *%23${invoice.id}* (Status: *PAID ✓*).%0A%0A*Receipt Details:*%0A- Bill No: ${invoice.id}%0A- Date %26 Time: ${billDateTime}%0A- ${isPharmacy ? 'Prescribed By' : 'Doctor'}: ${docDisplay}%0A- Total Paid: ₹${invoice.totalAmount.toFixed(2)}%0A- Payment Status: PAID ✓%0A%0A📄 *Download / View Official PDF Tax Invoice:*%0A${encodeURIComponent(lastBillUrl)}%0A%0AThank you for choosing ${hospitalName}!%0A%0A*** WISH YOU A SPEEDY RECOVERY ***`;
+                  window.open(`https://wa.me/91${cleanPhone}?text=${paidWaText}`, '_blank');
+                }}
+                className="flex-1 bg-[#25D366] hover:bg-[#1DA851] text-white py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-colors"
+              >
+                <Smartphone className="w-4 h-4" />
+                <span>Re-open WhatsApp Chat</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  if (lastBillUrl) {
+                    navigator.clipboard.writeText(lastBillUrl);
+                    setCopiedLink(true);
+                    setTimeout(() => setCopiedLink(false), 2000);
+                  }
+                }}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 px-3.5 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors"
+              >
+                {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                <span>{copiedLink ? 'Copied!' : 'Copy PDF Link'}</span>
+              </button>
+
+              <button
+                onClick={handleDownloadPdf}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 px-3.5 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download Again</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -8,6 +8,7 @@ import { ProfileModal } from './components/ProfileModal';
 import { DataImportWizard } from './components/DataImportWizard';
 import { OrgTypeSelectionModal } from './components/OrgTypeSelectionModal';
 import { LegalModal, LegalTab } from './components/LegalModal';
+import { PatientBillView } from './components/PatientBillView';
 import { AppStateProvider, useAppState } from './context/AppStateContext';
 import { ProcurementProvider } from './context/ProcurementContext';
 import { PaymentProvider } from './context/PaymentContext';
@@ -31,11 +32,28 @@ const AppContent = () => {
   const [showOrgTypeModal, setShowOrgTypeModal] = useState(false);
   const [showLandingPage, setShowLandingPage] = useState(false);
   const [legalModalTab, setLegalModalTab] = useState<LegalTab | null>(null);
+  const [billViewData, setBillViewData] = useState<{ id?: string; data?: string } | null>(null);
 
-  // Listen to URL hash for direct links (#privacy, #terms, #gst, #drug-license)
+  // Listen to URL hash for direct links (#privacy, #terms, #gst, #drug-license, #view-bill)
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.toLowerCase().replace('#', '');
+      const fullHash = window.location.hash.replace(/^#/, '');
+
+      if (fullHash.startsWith('view-bill') || fullHash.startsWith('bill')) {
+        const qIndex = fullHash.indexOf('?');
+        if (qIndex !== -1) {
+          const params = new URLSearchParams(fullHash.slice(qIndex + 1));
+          setBillViewData({
+            id: params.get('id') || undefined,
+            data: params.get('data') || undefined
+          });
+        } else {
+          setBillViewData({ id: undefined, data: undefined });
+        }
+        return;
+      }
+
+      const hash = fullHash.toLowerCase();
       if (hash === 'privacy' || hash === 'terms' || hash === 'gst' || hash === 'drug-license') {
         setLegalModalTab(hash as LegalTab);
       }
@@ -231,6 +249,19 @@ const AppContent = () => {
           }
         }}
       />
+
+      {/* Patient Public Bill & Official PDF Viewer */}
+      {billViewData && (
+        <PatientBillView
+          billData={billViewData}
+          onClose={() => {
+            setBillViewData(null);
+            if (window.location.hash.startsWith('#view-bill') || window.location.hash.startsWith('#bill')) {
+              history.replaceState(null, '', window.location.pathname);
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

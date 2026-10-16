@@ -19,6 +19,7 @@ import {
 import { useAppState } from '../../context/AppStateContext';
 import { doctors } from '../../data/mockData';
 import { PrescriptionItem, PatientDetails, Invoice } from '../../types';
+import { getBillShareUrl } from '../../lib/invoiceShare';
 import { v4 as uuidv4 } from 'uuid';
 
 export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string, patientPhone?: string, total?: number, billId?: string) => void }) => {
@@ -220,7 +221,8 @@ export const OpdConsultation = ({ onComplete }: { onComplete: (invoiceId: string
     const vpa = "clinicpulse@upi";
     const upiString = `upi://pay?pa=${vpa}&pn=ClinicPulse&am=${totalAmount.toFixed(2)}&cu=INR&tn=Invoice-${billId}`;
     const medSummary = prescriptions.map(p => `• ${p.medicineName} (${p.quantity} qty)`).join('%0A');
-    const waText = `*${isPharmacy ? 'Pharmacy Tax Invoice' : 'Medical Tax Invoice'} %26 Payment Link - Bill %23${billId}*%0A%0AHello *${patient.name}*,%0AYour medicine bill has been generated at ClinicPulse Pro.%0A%0A*Bill No:* ${billId}%0A*Prescribed By:* ${effectiveDoctorName}%0A*Amount Due:* ₹${totalAmount.toFixed(2)}%0A*Payment Link (Instant UPI):*%0A${encodeURIComponent(upiString)}%0A%0A*Medicines Dispensed:*%0A${medSummary}%0A%0APlease pay using the UPI link above. Once confirmed, your official PDF bill will be generated and saved!%0A%0A*** WISH YOU A SPEEDY RECOVERY ***`;
+    const billLink = getBillShareUrl(invoice, isPharmacy ? 'Medical Store & Pharmacy' : 'ClinicPulse Hospital');
+    const waText = `*${isPharmacy ? 'Pharmacy Tax Invoice' : 'Medical Tax Invoice'} %26 Payment Link - Bill %23${billId}*%0A%0AHello *${patient.name}*,%0AYour medicine bill has been generated at ClinicPulse Pro.%0A%0A*Bill No:* ${billId}%0A*Prescribed By:* ${effectiveDoctorName}%0A*Amount Due:* ₹${totalAmount.toFixed(2)}%0A*Payment Link (Instant UPI):*%0A${encodeURIComponent(upiString)}%0A%0A📄 *View & Download Bill Online:*%0A${encodeURIComponent(billLink)}%0A%0A*Medicines Dispensed:*%0A${medSummary}%0A%0APlease pay using the UPI link above. Once confirmed, your official PDF bill will be generated and saved!%0A%0A*** WISH YOU A SPEEDY RECOVERY ***`;
 
     if (cleanPhone) {
       window.open(`https://wa.me/91${cleanPhone}?text=${waText}`, '_blank');
