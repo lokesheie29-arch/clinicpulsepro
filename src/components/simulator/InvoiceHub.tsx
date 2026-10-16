@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Printer, Smartphone, CheckCircle, Download, Send, AlertCircle, Loader2, CreditCard, QrCode, Landmark, ShieldCheck, X } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Printer, Smartphone, CheckCircle, Download, Send, AlertCircle, Loader2, CreditCard, QrCode, Landmark, ShieldCheck, X, Receipt, Plus } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
 import { usePayment } from '../../context/PaymentContext';
 import { PatientPaymentPortal } from '../payments/PatientPaymentPortal';
@@ -32,13 +32,28 @@ function numberToWords(num: number): string {
   return result + ' Only';
 }
 
-export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | null }) => {
+export const InvoiceHub = ({ 
+  selectedInvoiceId,
+  onNewBill 
+}: { 
+  selectedInvoiceId: string | null;
+  onNewBill?: () => void;
+}) => {
   const { invoices, updateInvoicePaymentStatus, orgType } = useAppState();
   const { activeConfig, transactions } = usePayment();
   const { user } = useUser();
+  const [activeInvoiceId, setActiveInvoiceId] = useState<string>(selectedInvoiceId || invoices[0]?.id || '');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+  useEffect(() => {
+    if (selectedInvoiceId) {
+      setActiveInvoiceId(selectedInvoiceId);
+    } else if (invoices.length > 0 && !activeInvoiceId) {
+      setActiveInvoiceId(invoices[0].id);
+    }
+  }, [selectedInvoiceId, invoices]);
 
   const isPharmacy = orgType === 'pharmacy';
 
@@ -72,11 +87,11 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
     'Admin/Staff';
 
   const invoice = useMemo(() => {
-    if (selectedInvoiceId) {
-      return invoices.find(i => i.id === selectedInvoiceId) || invoices[0];
+    if (activeInvoiceId) {
+      return invoices.find(i => i.id === activeInvoiceId) || invoices[0];
     }
     return invoices[0];
-  }, [invoices, selectedInvoiceId]);
+  }, [invoices, activeInvoiceId]);
 
   if (!invoice) {
     return <div className="text-center py-12 text-slate-500">No invoices available.</div>;
@@ -133,7 +148,8 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
       return `• ${p.medicineName} (${p.quantity} qty)${discStr}`;
     }).join('%0A');
     const discountLine = totalDiscount > 0 ? `%0A*Discount Saved:* -₹${totalDiscount.toFixed(2)}%0A` : '';
-    const waText = `*${isPharmacy ? 'Pharmacy Tax Invoice' : 'Medical Tax Invoice'} %26 Payment Link - Bill %23${invoice.id}*%0A%0AHello *${invoice.patient.name}*,%0AYour medical bill has been generated at *${hospitalName}*.%0A%0A*Bill No:* ${invoice.id}%0A*Doctor:* ${doctor?.name || 'General'}%0A*Total Amount Due:* ₹${invoice.totalAmount.toFixed(2)}${discountLine}%0A*Payment Status:* PENDING PAYMENT%0A%0A*Payment Link (Instant UPI):*%0A${encodeURIComponent(upiString)}%0A%0A*Medicines Prescribed:*%0A${medSummary}%0A%0APlease pay using the UPI link above. Once payment is confirmed, your official PDF bill will be generated and dispatched automatically!%0A%0A*** WISH YOU A SPEEDY RECOVERY ***`;
+    const docDisplay = invoice.prescribedByDoctorName || doctor?.name || 'General / Direct';
+    const waText = `*${isPharmacy ? 'Pharmacy Tax Invoice' : 'Medical Tax Invoice'} %26 Payment Link - Bill %23${invoice.id}*%0A%0AHello *${invoice.patient.name}*,%0AYour medical bill has been generated at *${hospitalName}*.%0A%0A*Bill No:* ${invoice.id}%0A*${isPharmacy ? 'Prescribed By' : 'Doctor'}:* ${docDisplay}%0A*Total Amount Due:* ₹${invoice.totalAmount.toFixed(2)}${discountLine}%0A*Payment Status:* PENDING PAYMENT%0A%0A*Payment Link (Instant UPI):*%0A${encodeURIComponent(upiString)}%0A%0A*Medicines Prescribed:*%0A${medSummary}%0A%0APlease pay using the UPI link above. Once payment is confirmed, your official PDF bill will be generated and dispatched automatically!%0A%0A*** WISH YOU A SPEEDY RECOVERY ***`;
 
     window.open(`https://wa.me/91${cleanPhone}?text=${waText}`, '_blank');
     setStatusMessage('Payment link dispatched to patient WhatsApp!');
@@ -194,7 +210,8 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
         return `• ${p.medicineName} (${p.quantity} qty)${discStr}`;
       }).join('%0A');
       const discountLine = totalDiscount > 0 ? `%0A- Discount Saved: -₹${totalDiscount.toFixed(2)} (Applied)` : '';
-      const paidWaText = `*${hospitalName} - Payment Confirmation %26 Official Tax Invoice*%0A%0AHello *${invoice.patient.name}*,%0AThank you! We have received your payment of *₹${invoice.totalAmount.toFixed(2)}* for Bill *%23${invoice.id}* (Status: *PAID ✓*).%0A%0A*Receipt Details:*%0A- Bill No: ${invoice.id}%0A- Date %26 Time: ${billDateTime}%0A- Doctor: ${doctor?.name || 'General / Direct'}%0A- Total Paid: ₹${invoice.totalAmount.toFixed(2)}${discountLine}%0A- Payment Status: PAID ✓%0A%0A*Items / Medicines:*%0A${medList}%0A%0AYour official GST Tax Invoice PDF has been generated and saved.%0AThank you for choosing ${hospitalName}!%0A%0A*** WISH YOU A SPEEDY RECOVERY ***`;
+      const docDisplay = invoice.prescribedByDoctorName || doctor?.name || 'General / Direct';
+      const paidWaText = `*${hospitalName} - Payment Confirmation %26 Official Tax Invoice*%0A%0AHello *${invoice.patient.name}*,%0AThank you! We have received your payment of *₹${invoice.totalAmount.toFixed(2)}* for Bill *%23${invoice.id}* (Status: *PAID ✓*).%0A%0A*Receipt Details:*%0A- Bill No: ${invoice.id}%0A- Date %26 Time: ${billDateTime}%0A- ${isPharmacy ? 'Prescribed By' : 'Doctor'}: ${docDisplay}%0A- Total Paid: ₹${invoice.totalAmount.toFixed(2)}${discountLine}%0A- Payment Status: PAID ✓%0A%0A*Items / Medicines:*%0A${medList}%0A%0AYour official GST Tax Invoice PDF has been generated and saved.%0AThank you for choosing ${hospitalName}!%0A%0A*** WISH YOU A SPEEDY RECOVERY ***`;
 
       window.open(`https://wa.me/91${cleanPhone}?text=${paidWaText}`, '_blank');
       setStatusMessage('Payment verified! Official PDF tax invoice downloaded & sent to patient WhatsApp.');
@@ -228,9 +245,9 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
       {/* ─── Left: Invoice Preview (exact pharmacy bill style) ─── */}
-      <div className="lg:col-span-2">
+      <div className="lg:col-span-2 space-y-4">
         {statusMessage && (
-          <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs font-medium flex items-center justify-between print:hidden">
+          <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs font-medium flex items-center justify-between print:hidden">
             <span className="flex items-center gap-1.5">
               <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
               <span>{statusMessage}</span>
@@ -238,6 +255,34 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
             <button onClick={() => setStatusMessage(null)} className="text-emerald-600 font-bold ml-2">×</button>
           </div>
         )}
+
+        {/* Top Control Bar: Switch Invoice & Generate New Bill */}
+        <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3 print:hidden">
+          <div className="flex items-center gap-2.5 flex-1 min-w-[220px]">
+            <Receipt className="w-4 h-4 text-teal-600 shrink-0" />
+            <select
+              value={activeInvoiceId}
+              onChange={(e) => setActiveInvoiceId(e.target.value)}
+              className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-navy-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 w-full"
+            >
+              {invoices.map((inv) => (
+                <option key={inv.id} value={inv.id}>
+                  {inv.id} — {inv.patient.name} (₹{inv.totalAmount.toFixed(2)}) [{inv.paymentStatus}]
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {onNewBill && (
+            <button
+              onClick={onNewBill}
+              className="bg-gradient-to-r from-teal-600 via-teal-700 to-navy-900 hover:from-teal-700 hover:to-navy-800 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 shrink-0"
+            >
+              <Plus className="w-4 h-4 text-teal-300" />
+              <span>{isPharmacy ? 'Generate New Medicine Bill' : 'Generate New Bill'}</span>
+            </button>
+          )}
+        </div>
 
         <div
           className="bg-white border border-slate-300 shadow-sm print:border-none print:shadow-none"
@@ -265,7 +310,7 @@ export const InvoiceHub = ({ selectedInvoiceId }: { selectedInvoiceId: string | 
             {/* Left column */}
             <div className="space-y-0.5">
               <div><span className="font-bold">Cust. Name</span> : {invoice.patient.name}</div>
-              <div><span className="font-bold">{isPharmacy ? 'Prescribed By' : 'Doctor Name'}</span> : {doctor?.name || 'Direct / OTC'}</div>
+              <div><span className="font-bold">{isPharmacy ? 'Prescribed By' : 'Doctor Name'}</span> : {invoice.prescribedByDoctorName || doctor?.name || 'Direct / OTC'}</div>
               <div><span className="font-bold">Ph No</span> : +91 {invoice.patient.phone}</div>
               {invoice.patient.complaints && (
                 <div><span className="font-bold">Complaints</span> : {invoice.patient.complaints}</div>

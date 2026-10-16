@@ -1,4 +1,4 @@
-import { Medicine, Invoice, LabTest, LabReport } from '../types';
+import { Medicine, Invoice, LabTest, LabReport, Doctor } from '../types';
 
 const getRelativeDate = (days: number) => {
   const d = new Date();
@@ -153,9 +153,15 @@ export const initialInvoices: Invoice[] = [
   }
 ];
 
-export const doctors = [
-  { id: 'doc-1', name: 'Dr. Rahul Sharma', specialty: 'General Physician', regNo: 'MCI-12345' },
-  { id: 'doc-2', name: 'Dr. Priya Desai', specialty: 'Pediatrician', regNo: 'MCI-67890' },
+export const doctors: Doctor[] = [
+  { id: 'doc-1', name: 'Dr. Rahul Sharma, MBBS, MD', specialty: 'General Medicine', regNo: 'MCI-12345', clinic: 'ClinicPulse Multispecialty' },
+  { id: 'doc-2', name: 'Dr. Priya Desai, MBBS, DCH', specialty: 'Pediatrics', regNo: 'MCI-67890', clinic: 'Children Care Center' },
+  { id: 'doc-3', name: 'Dr. K. Senthil Kumar, MD, DM', specialty: 'Cardiology', regNo: 'TMC-84920', clinic: 'Heart & Vascular Clinic' },
+  { id: 'doc-4', name: 'Dr. Ananya Iyer, MD (DVL)', specialty: 'Dermatology & Cosmetology', regNo: 'TMC-91823', clinic: 'Skin Health Studio' },
+  { id: 'doc-5', name: 'Dr. Rajesh Patel, MS (Ortho)', specialty: 'Orthopedics & Joint Care', regNo: 'GMC-55102', clinic: 'Ortho Spine Care' },
+  { id: 'doc-6', name: 'Dr. Meenakshi Sundaram, MS, DGO', specialty: 'Obstetrics & Gynecology', regNo: 'TMC-66234', clinic: 'Women Health Center' },
+  { id: 'doc-otc', name: 'Self Medication / OTC', specialty: 'Over The Counter (Direct Walk-in)', regNo: 'N/A', clinic: 'Retail Counter' },
+  { id: 'doc-other', name: 'Other Prescribing Doctor (External)', specialty: 'External Practitioner / Outside Prescription', regNo: '', clinic: 'External Clinic' }
 ];
 
 

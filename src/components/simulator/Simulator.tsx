@@ -10,7 +10,8 @@ import {
   SlidersHorizontal,
   Check,
   ShoppingCart,
-  CreditCard
+  CreditCard,
+  PlusCircle
 } from 'lucide-react';
 import { OpdConsultation } from './OpdConsultation';
 import { InvoiceHub } from './InvoiceHub';
@@ -26,7 +27,7 @@ export const Simulator = () => {
 
   const getDefaultTab = () => {
     if (orgType === 'laboratory') return 'lab';
-    if (orgType === 'pharmacy') return 'pharmacy';
+    if (orgType === 'pharmacy') return 'opd';
     return 'opd';
   };
 
@@ -39,8 +40,8 @@ export const Simulator = () => {
     if (!showAllModules) {
       if (orgType === 'laboratory' && !['lab', 'invoice', 'payments', 'analytics', 'procurement'].includes(activeTab)) {
         setActiveTab('lab');
-      } else if (orgType === 'pharmacy' && !['pharmacy', 'invoice', 'payments', 'analytics', 'procurement'].includes(activeTab)) {
-        setActiveTab('pharmacy');
+      } else if (orgType === 'pharmacy' && !['opd', 'pharmacy', 'invoice', 'payments', 'analytics', 'procurement'].includes(activeTab)) {
+        setActiveTab('opd');
       } else if (orgType === 'hospital' && !['opd', 'lab', 'invoice', 'pharmacy', 'payments', 'analytics', 'procurement'].includes(activeTab)) {
         setActiveTab('opd');
       }
@@ -56,8 +57,8 @@ export const Simulator = () => {
     switch (activeTab) {
       case 'opd': return <OpdConsultation onComplete={handleInvoiceGenerated} />;
       case 'lab': return <LabDiagnostics onSwitchTab={setActiveTab} />;
-      case 'invoice': return <InvoiceHub selectedInvoiceId={selectedInvoiceId} />;
-      case 'pharmacy': return <PharmacyInventory />;
+      case 'invoice': return <InvoiceHub selectedInvoiceId={selectedInvoiceId} onNewBill={() => setActiveTab('opd')} />;
+      case 'pharmacy': return <PharmacyInventory onNewBill={() => setActiveTab('opd')} />;
       case 'payments': return <PaymentHub />;
       case 'analytics': return <Analytics />;
       case 'procurement': return <ProcurementHub />;
@@ -65,65 +66,54 @@ export const Simulator = () => {
     }
   };
 
-  // Define tabs configuration
-  const allTabs = [
-    {
-      id: 'opd',
-      label: '1. OPD Studio',
-      icon: <Stethoscope className="h-5 w-5" />,
-      types: ['hospital']
-    },
-    {
-      id: 'lab',
-      label: orgType === 'laboratory' && !showAllModules ? '1. Lab & Diagnostics' : '2. Lab & Diagnostics',
-      icon: <Microscope className="h-5 w-5" />,
-      types: ['hospital', 'laboratory']
-    },
-    {
-      id: 'invoice',
-      label: orgType === 'laboratory' && !showAllModules
-        ? '2. Lab Billing & WhatsApp'
-        : orgType === 'pharmacy' && !showAllModules
-        ? '2. Medicine Billing & WhatsApp'
-        : '3. Billing & WhatsApp',
-      icon: <Receipt className="h-5 w-5" />,
-      types: ['hospital', 'laboratory', 'pharmacy']
-    },
-    {
-      id: 'pharmacy',
-      label: orgType === 'pharmacy' && !showAllModules ? '1. FEFO Pharmacy Inventory' : '4. FEFO Pharmacy',
-      icon: <Pill className="h-5 w-5" />,
-      types: ['hospital', 'pharmacy']
-    },
-    {
-      id: 'payments',
-      label: (!showAllModules && (orgType === 'laboratory' || orgType === 'pharmacy'))
-        ? '3. Payments & UPI Banking'
-        : '5. Payments & UPI Banking',
-      icon: <CreditCard className="h-5 w-5" />,
-      types: ['hospital', 'laboratory', 'pharmacy']
-    },
-    {
-      id: 'analytics',
-      label: (!showAllModules && (orgType === 'laboratory' || orgType === 'pharmacy'))
-        ? '4. Financial Analytics'
-        : '6. Financial Analytics',
-      icon: <BarChart3 className="h-5 w-5" />,
-      types: ['hospital', 'laboratory', 'pharmacy']
-    },
-    {
-      id: 'procurement',
-      label: (!showAllModules && (orgType === 'laboratory' || orgType === 'pharmacy'))
-        ? '5. Purchase & Procurement'
-        : '7. Purchase & Procurement',
-      icon: <ShoppingCart className="h-5 w-5" />,
-      types: ['hospital', 'laboratory', 'pharmacy']
+  // Define tailored tabs configuration per business type
+  const getTabs = () => {
+    if (showAllModules) {
+      return [
+        { id: 'opd', label: '1. OPD Studio', icon: <Stethoscope className="h-5 w-5" /> },
+        { id: 'lab', label: '2. Lab & Diagnostics', icon: <Microscope className="h-5 w-5" /> },
+        { id: 'invoice', label: '3. Billing & WhatsApp', icon: <Receipt className="h-5 w-5" /> },
+        { id: 'pharmacy', label: '4. FEFO Pharmacy', icon: <Pill className="h-5 w-5" /> },
+        { id: 'payments', label: '5. Payments & UPI Banking', icon: <CreditCard className="h-5 w-5" /> },
+        { id: 'analytics', label: '6. Financial Analytics', icon: <BarChart3 className="h-5 w-5" /> },
+        { id: 'procurement', label: '7. Purchase & Procurement', icon: <ShoppingCart className="h-5 w-5" /> },
+      ];
     }
-  ];
 
-  const visibleTabs = showAllModules
-    ? allTabs
-    : allTabs.filter(t => t.types.includes(orgType));
+    if (orgType === 'laboratory') {
+      return [
+        { id: 'lab', label: '1. Lab & Diagnostics', icon: <Microscope className="h-5 w-5" /> },
+        { id: 'invoice', label: '2. Lab Billing & WhatsApp', icon: <Receipt className="h-5 w-5" /> },
+        { id: 'payments', label: '3. Payments & UPI Banking', icon: <CreditCard className="h-5 w-5" /> },
+        { id: 'analytics', label: '4. Financial Analytics', icon: <BarChart3 className="h-5 w-5" /> },
+        { id: 'procurement', label: '5. Purchase & Procurement', icon: <ShoppingCart className="h-5 w-5" /> },
+      ];
+    }
+
+    if (orgType === 'pharmacy') {
+      return [
+        { id: 'opd', label: '1. Generate New Bill', icon: <PlusCircle className="h-5 w-5" /> },
+        { id: 'pharmacy', label: '2. FEFO Pharmacy Inventory', icon: <Pill className="h-5 w-5" /> },
+        { id: 'invoice', label: '3. Medicine Bills & WhatsApp', icon: <Receipt className="h-5 w-5" /> },
+        { id: 'payments', label: '4. Payments & UPI Banking', icon: <CreditCard className="h-5 w-5" /> },
+        { id: 'analytics', label: '5. Financial Analytics', icon: <BarChart3 className="h-5 w-5" /> },
+        { id: 'procurement', label: '6. Purchase & Procurement', icon: <ShoppingCart className="h-5 w-5" /> },
+      ];
+    }
+
+    // Default: Hospital
+    return [
+      { id: 'opd', label: '1. OPD Studio', icon: <Stethoscope className="h-5 w-5" /> },
+      { id: 'lab', label: '2. Lab & Diagnostics', icon: <Microscope className="h-5 w-5" /> },
+      { id: 'invoice', label: '3. Billing & WhatsApp', icon: <Receipt className="h-5 w-5" /> },
+      { id: 'pharmacy', label: '4. FEFO Pharmacy', icon: <Pill className="h-5 w-5" /> },
+      { id: 'payments', label: '5. Payments & UPI Banking', icon: <CreditCard className="h-5 w-5" /> },
+      { id: 'analytics', label: '6. Financial Analytics', icon: <BarChart3 className="h-5 w-5" /> },
+      { id: 'procurement', label: '7. Purchase & Procurement', icon: <ShoppingCart className="h-5 w-5" /> },
+    ];
+  };
+
+  const visibleTabs = getTabs();
 
   const getOrgMeta = () => {
     switch (orgType) {
@@ -176,7 +166,7 @@ export const Simulator = () => {
             title="Toggle between organization-specific modules and the full ERP suite"
           >
             <SlidersHorizontal className="h-3.5 w-3.5 text-teal-600" />
-            <span>{showAllModules ? 'Filter by Org Type' : `Show All Modules (${allTabs.length})`}</span>
+            <span>{showAllModules ? 'Filter by Org Type' : 'Show All Modules (7)'}</span>
           </button>
 
           <button 

@@ -48,6 +48,7 @@ export interface Invoice {
   id: string;
   patient: PatientDetails;
   doctorId: string;
+  prescribedByDoctorName?: string;
   consultationFee: number;
   prescriptionItems: PrescriptionItem[];
   labItems?: LabTestOrder[];
@@ -58,6 +59,15 @@ export interface Invoice {
   totalAmount: number;
   date: string;
   paymentStatus: 'Pending' | 'Paid';
+}
+
+export interface Doctor {
+  id: string;
+  name: string;
+  specialty: string;
+  regNo?: string;
+  phone?: string;
+  clinic?: string;
 }
 
 export interface UserRole {

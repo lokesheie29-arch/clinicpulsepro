@@ -17,7 +17,8 @@ import {
   X,
   Send,
   Copy,
-  Check
+  Check,
+  Receipt
 } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
 import { Medicine } from '../../types';
@@ -35,7 +36,7 @@ interface ExpiryStatusInfo {
   daysDiff: number;
 }
 
-export const PharmacyInventory = () => {
+export const PharmacyInventory = ({ onNewBill }: { onNewBill?: () => void }) => {
   const { medicines, restockMedicine, addMedicine, updateMedicine, orgType } = useAppState();
   const { user } = useUser();
 
@@ -637,6 +638,16 @@ export const PharmacyInventory = () => {
               className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-teal-500 bg-white"
             />
           </div>
+
+          {onNewBill && (
+            <button
+              onClick={onNewBill}
+              className="flex items-center space-x-1.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 whitespace-nowrap"
+            >
+              <Receipt className="h-4 w-4 text-emerald-200" />
+              <span>Generate New Bill</span>
+            </button>
+          )}
 
           <button
             onClick={() => setShowAddModal(true)}
