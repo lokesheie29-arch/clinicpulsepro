@@ -9,6 +9,7 @@ import { DataImportWizard } from './components/DataImportWizard';
 import { OrgTypeSelectionModal } from './components/OrgTypeSelectionModal';
 import { LegalModal, LegalTab } from './components/LegalModal';
 import { PatientBillView } from './components/PatientBillView';
+import { CheckoutPage, PlanId, BillingCycle } from './components/CheckoutPage';
 import { AppStateProvider, useAppState } from './context/AppStateContext';
 import { ProcurementProvider } from './context/ProcurementContext';
 import { PaymentProvider } from './context/PaymentContext';
@@ -33,11 +34,29 @@ const AppContent = () => {
   const [showLandingPage, setShowLandingPage] = useState(false);
   const [legalModalTab, setLegalModalTab] = useState<LegalTab | null>(null);
   const [billViewData, setBillViewData] = useState<{ id?: string; data?: string } | null>(null);
+  const [checkoutParams, setCheckoutParams] = useState<{ plan?: PlanId; billing?: BillingCycle } | null>(null);
 
-  // Listen to URL hash for direct links (#privacy, #terms, #gst, #drug-license, #view-bill)
+  // Listen to URL hash for direct links (#privacy, #terms, #gst, #drug-license, #view-bill, #checkout)
   useEffect(() => {
     const handleHashChange = () => {
       const fullHash = window.location.hash.replace(/^#/, '');
+
+      // Check for subscription checkout route: #checkout or #checkout?plan=professional&billing=annual
+      if (fullHash.startsWith('checkout')) {
+        const qIndex = fullHash.indexOf('?');
+        if (qIndex !== -1) {
+          const params = new URLSearchParams(fullHash.slice(qIndex + 1));
+          setCheckoutParams({
+            plan: (params.get('plan') as PlanId) || 'professional',
+            billing: (params.get('billing') as BillingCycle) || 'annual'
+          });
+        } else {
+          setCheckoutParams({ plan: 'professional', billing: 'annual' });
+        }
+        return;
+      } else {
+        setCheckoutParams(null);
+      }
 
       if (fullHash.startsWith('view-bill') || fullHash.startsWith('bill')) {
         const qIndex = fullHash.indexOf('?');
@@ -122,8 +141,21 @@ const AppContent = () => {
       )}
 
       <main className="flex-grow">
-        {/* If signed in and NOT toggling public website preview: Go STRAIGHT to Clinic Modules */}
-        {isSignedIn && !showLandingPage ? (
+        {/* If user is checking out a subscription, show CheckoutPage */}
+        {checkoutParams ? (
+          <CheckoutPage
+            initialPlan={checkoutParams.plan}
+            initialBilling={checkoutParams.billing}
+            onBack={() => {
+              setCheckoutParams(null);
+              window.location.hash = '';
+            }}
+            onSuccess={() => {
+              setCheckoutParams(null);
+              window.location.hash = '';
+            }}
+          />
+        ) : isSignedIn && !showLandingPage ? (
           <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
             {/* Staff Welcome & Clinic Info Header */}
             <div className="bg-gradient-to-r from-navy-900 via-navy-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg mb-8 relative overflow-hidden">

@@ -6,4 +6,17 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  build: {
+    chunkSizeWarningLimit: 2000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          clerk: ['@clerk/react'],
+          charts: ['recharts'],
+          pdf: ['jspdf', 'html2canvas']
+        }
+      }
+    }
+  }
 });

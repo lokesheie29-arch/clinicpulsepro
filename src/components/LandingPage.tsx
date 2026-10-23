@@ -271,27 +271,30 @@ export const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-navy-900 mb-4">Transparent India-First Pricing</h2>
-            <p className="text-slate-600">No hidden charges. No per-patient fees.</p>
+            <p className="text-slate-600">No hidden charges. No per-patient fees. Instant Razorpay &amp; UPI activation.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <PricingCard 
+              planId="starter"
               title="Starter Clinic"
               price="₹999"
               period="/month"
-              features={['1 Doctor Profile', 'OPD + Billing', '100 WhatsApp Invoices/mo', 'Basic Support']}
+              features={['1 Doctor Profile', 'OPD + Billing', '100 WhatsApp Invoices/mo', 'Basic Pharmacy Stock', 'Email Support']}
             />
             <PricingCard 
+              planId="professional"
               title="Growth Clinic"
               price="₹2,499"
               period="/month"
-              features={['Up to 3 Doctors', 'Full ERP + Pharmacy', 'Unlimited WhatsApp Billing', 'GST Reports', 'Priority Support']}
+              features={['Up to 3 Doctors', 'Full ERP + Lab Diagnostics', 'FEFO Pharmacy & Expiry Alerts', 'Unlimited WhatsApp Billing', 'Priority Support']}
               isPopular
             />
             <PricingCard 
-              title="Polyclinic"
+              planId="enterprise"
+              title="Polyclinic & Hospital"
               price="₹4,999"
               period="/month"
-              features={['Unlimited Doctors', 'Multiple Locations', 'Custom Analytics API', 'Dedicated Account Manager']}
+              features={['Unlimited Doctors', 'Purchase & Procurement Suite', 'Multiple Branches & Warehouses', 'Custom GST & Drug Licensing', 'Dedicated Account Manager']}
             />
           </div>
         </div>
@@ -354,27 +357,42 @@ const FeatureCard = ({ icon, title, desc }: any) => (
   </div>
 );
 
-const PricingCard = ({ title, price, period, features, isPopular }: any) => (
-  <div className={`relative p-8 rounded-2xl bg-white border ${isPopular ? 'border-teal-500 shadow-xl shadow-teal-100' : 'border-slate-200 shadow-sm'} flex flex-col`}>
-    {isPopular && <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-teal-500 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide">Most Popular</div>}
-    <h3 className="text-xl font-bold text-navy-900 mb-2">{title}</h3>
-    <div className="mb-6">
-      <span className="text-4xl font-extrabold text-navy-900">{price}</span>
-      <span className="text-slate-500">{period}</span>
+const PricingCard = ({ title, price, period, features, isPopular, planId }: any) => {
+  const handleSubscribe = () => {
+    window.location.hash = `checkout?plan=${planId || 'professional'}&billing=annual`;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  return (
+    <div className={`relative p-8 rounded-2xl bg-white border ${isPopular ? 'border-teal-500 shadow-xl shadow-teal-100' : 'border-slate-200 shadow-sm'} flex flex-col`}>
+      {isPopular && <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-teal-500 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide">Most Popular</div>}
+      <h3 className="text-xl font-bold text-navy-900 mb-2">{title}</h3>
+      <div className="mb-6">
+        <span className="text-4xl font-extrabold text-navy-900">{price}</span>
+        <span className="text-slate-500">{period}</span>
+      </div>
+      <ul className="space-y-4 mb-8 flex-1">
+        {features.map((f: string, i: number) => (
+          <li key={i} className="flex items-start space-x-3">
+            <CheckCircle className="h-5 w-5 text-teal-500 shrink-0 mt-0.5" />
+            <span className="text-slate-700">{f}</span>
+          </li>
+        ))}
+      </ul>
+      <button 
+        onClick={handleSubscribe}
+        className={`w-full py-3.5 rounded-xl font-extrabold text-sm transition-all shadow-sm flex items-center justify-center gap-2 ${
+          isPopular 
+            ? 'bg-gradient-to-r from-teal-600 via-teal-700 to-navy-900 hover:from-teal-700 hover:to-navy-800 text-white shadow-teal-600/20' 
+            : 'bg-slate-100 hover:bg-slate-200 text-navy-900'
+        }`}
+      >
+        <span>Subscribe &amp; Activate</span>
+        <ArrowRight className="w-4 h-4" />
+      </button>
     </div>
-    <ul className="space-y-4 mb-8 flex-1">
-      {features.map((f: string, i: number) => (
-        <li key={i} className="flex items-start space-x-3">
-          <CheckCircle className="h-5 w-5 text-teal-500 shrink-0 mt-0.5" />
-          <span className="text-slate-700">{f}</span>
-        </li>
-      ))}
-    </ul>
-    <button className={`w-full py-3 rounded-lg font-bold transition-colors ${isPopular ? 'bg-teal-600 hover:bg-teal-700 text-white' : 'bg-slate-100 hover:bg-slate-200 text-navy-900'}`}>
-      Get Started
-    </button>
-  </div>
-);
+  );
+};
 
 const Testimonial = ({ quote, name, role, location }: any) => (
   <div className="bg-slate-50 p-8 rounded-2xl border border-slate-100 relative">

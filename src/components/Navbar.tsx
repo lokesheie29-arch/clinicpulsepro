@@ -1,4 +1,4 @@
-import { ShieldCheck, Key, UserCheck } from 'lucide-react';
+import { ShieldCheck, Key, UserCheck, Sparkles, CreditCard } from 'lucide-react';
 import { Show, SignInButton, SignUpButton, UserButton, useUser } from '@clerk/react';
 import { Logo } from './Logo';
 
@@ -63,6 +63,19 @@ export const Navbar = ({
             </a>
 
             <Show when="signed-in">
+              {/* Subscription / Plan Upgrade Button */}
+              <button
+                onClick={() => {
+                  window.location.hash = 'checkout?plan=professional&billing=annual';
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="hidden lg:flex items-center space-x-1.5 text-xs font-bold bg-teal-50 text-teal-800 hover:bg-teal-100 px-3 py-1.5 rounded-full transition-colors border border-teal-200"
+                title="Manage Subscription & Upgrade"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-teal-600" />
+                <span>Subscription</span>
+              </button>
+
               {/* Profile Settings Button */}
               <button
                 onClick={onProfileClick}
@@ -92,11 +105,16 @@ export const Navbar = ({
                     Sign In
                   </button>
                 </SignInButton>
-                <SignUpButton mode="modal">
-                  <button className="bg-teal-600 text-white px-4 py-2 rounded-full font-medium hover:bg-teal-700 transition-colors text-sm shadow-sm">
-                    Register
-                  </button>
-                </SignUpButton>
+                <button
+                  onClick={() => {
+                    window.location.hash = 'checkout?plan=professional&billing=annual';
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="bg-gradient-to-r from-teal-600 via-teal-700 to-navy-900 text-white px-4 py-2 rounded-full font-bold hover:from-teal-700 hover:to-navy-800 transition-all text-xs shadow-sm flex items-center gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-teal-300" />
+                  <span>Subscribe</span>
+                </button>
               </div>
             </Show>
           </div>
