@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '../_types';
 
 // Server-side Plan Configuration (Never trust client prices)
 const PLAN_PRICES: Record<string, Record<string, number>> = {

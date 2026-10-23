@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '../_types';
 import crypto from 'crypto';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
