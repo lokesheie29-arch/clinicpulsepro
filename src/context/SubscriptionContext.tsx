@@ -121,7 +121,17 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, [subscription]);
 
   const remainingDays = subscription ? calculateRemainingDays(subscription.trialExpiryDate) : 0;
-  const warningLevel = subscription ? getTrialWarningLevel(subscription) : 'none';
+  const rawWarning = subscription ? getTrialWarningLevel(remainingDays, subscription.status) : null;
+  const warningLevel: 'none' | 'info' | 'warning' | 'critical' | 'expired' =
+    rawWarning === 'expired'
+      ? 'expired'
+      : rawWarning === '1day'
+      ? 'critical'
+      : rawWarning === '3days'
+      ? 'warning'
+      : rawWarning === '7days'
+      ? 'info'
+      : 'none';
 
   const isPaidActive = subscription?.status === 'active';
   const isTrialValid = subscription?.status === 'trialing' && remainingDays > 0;

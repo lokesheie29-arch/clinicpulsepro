@@ -140,6 +140,16 @@ export const evaluateSubscriptionStatus = (sub: UserSubscription): SubscriptionS
 };
 
 /**
+ * Alias for fetching user subscription
+ */
+export const getUserSubscription = (
+  userId: string,
+  userEmail: string,
+  createdAtString?: string
+): Promise<UserSubscription | null> => fetchUserSubscription(userId, userEmail, createdAtString);
+
+
+/**
  * Fetches subscription record from Supabase or localStorage fallback
  */
 export const fetchUserSubscription = async (

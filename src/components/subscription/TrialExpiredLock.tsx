@@ -53,7 +53,7 @@ export const TrialExpiredLock: React.FC<TrialExpiredLockProps> = ({
               <p className="text-xs text-slate-400">{user?.primaryEmailAddress?.emailAddress}</p>
               <p className="text-xs font-semibold text-slate-200">{user?.fullName || 'Practitioner'}</p>
             </div>
-            <UserButton afterSignOutUrl="/" />
+            <UserButton />
           </div>
         </div>
       </header>

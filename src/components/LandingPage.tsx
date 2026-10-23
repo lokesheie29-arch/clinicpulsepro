@@ -11,7 +11,8 @@ import {
   Building2,
   Microscope,
   Pill,
-  ArrowRight
+  ArrowRight,
+  Sparkles
 } from 'lucide-react';
 import { SignUpButton } from '@clerk/react';
 import { useAppState } from '../context/AppStateContext';
