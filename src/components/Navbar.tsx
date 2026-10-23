@@ -1,10 +1,12 @@
-import { ShieldCheck, Key, UserCheck, Sparkles, CreditCard } from 'lucide-react';
+import { ShieldCheck, Key, UserCheck, Sparkles, CreditCard, Clock, AlertTriangle } from 'lucide-react';
 import { Show, SignInButton, SignUpButton, UserButton, useUser } from '@clerk/react';
 import { Logo } from './Logo';
+import { useSubscription } from '../context/SubscriptionContext';
 
 interface NavbarProps {
   onAdminClick?: () => void;
   onProfileClick?: () => void;
+  onSubscriptionClick?: () => void;
   showLandingPage?: boolean;
   onToggleLandingPage?: () => void;
 }
@@ -12,11 +14,22 @@ interface NavbarProps {
 export const Navbar = ({
   onAdminClick,
   onProfileClick,
+  onSubscriptionClick,
   showLandingPage,
   onToggleLandingPage
 }: NavbarProps) => {
   const { user } = useUser();
+  const { subscription, remainingDays, hasPaidAccess, isTrialActive, isTrialExpired } = useSubscription();
   const isAdmin = user?.primaryEmailAddress?.emailAddress === 'lokesheie29@gmail.com';
+
+  const handleSubscriptionClick = () => {
+    if (onSubscriptionClick) {
+      onSubscriptionClick();
+    } else {
+      window.location.hash = '#subscription';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   return (
     <nav className="print:hidden sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-slate-200">
@@ -63,17 +76,36 @@ export const Navbar = ({
             </a>
 
             <Show when="signed-in">
-              {/* Subscription / Plan Upgrade Button */}
+              {/* Subscription Status & Upgrade Button */}
               <button
-                onClick={() => {
-                  window.location.hash = 'checkout?plan=professional&billing=annual';
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                className="hidden lg:flex items-center space-x-1.5 text-xs font-bold bg-teal-50 text-teal-800 hover:bg-teal-100 px-3 py-1.5 rounded-full transition-colors border border-teal-200"
-                title="Manage Subscription & Upgrade"
+                onClick={handleSubscriptionClick}
+                className={`flex items-center space-x-1.5 text-xs font-bold px-3 py-1.5 rounded-full transition-all border ${
+                  hasPaidAccess
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                    : isTrialActive
+                    ? remainingDays <= 3
+                      ? 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100 animate-pulse'
+                      : 'bg-teal-50 text-teal-800 border-teal-200 hover:bg-teal-100'
+                    : 'bg-rose-100 text-rose-900 border-rose-300 hover:bg-rose-200'
+                }`}
+                title="Manage Subscription, Invoices & Licenses"
               >
-                <Sparkles className="h-3.5 w-3.5 text-teal-600" />
-                <span>Subscription</span>
+                {hasPaidAccess ? (
+                  <>
+                    <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>Commercial ERP ✓</span>
+                  </>
+                ) : isTrialActive ? (
+                  <>
+                    <Clock className="h-3.5 w-3.5 text-teal-600" />
+                    <span>Trial: {remainingDays}d left</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="h-3.5 w-3.5 text-rose-600" />
+                    <span>Trial Expired • Renew</span>
+                  </>
+                )}
               </button>
 
               {/* Profile Settings Button */}
@@ -89,9 +121,9 @@ export const Navbar = ({
               {isAdmin && (
                 <button
                   onClick={onAdminClick}
-                  className="flex items-center space-x-1 text-xs font-semibold bg-navy-900 text-white px-3 py-1.5 rounded-full hover:bg-navy-800 transition-colors"
+                  className="flex items-center space-x-1 text-xs font-semibold bg-slate-900 text-white px-3 py-1.5 rounded-full hover:bg-slate-800 transition-colors shadow-sm"
                 >
-                  <Key className="h-3.5 w-3.5" />
+                  <Key className="h-3.5 w-3.5 text-teal-400" />
                   <span>Admin</span>
                 </button>
               )}
@@ -101,7 +133,7 @@ export const Navbar = ({
             <Show when="signed-out">
               <div className="flex items-center space-x-2">
                 <SignInButton mode="modal">
-                  <button className="text-sm font-medium text-slate-600 hover:text-navy-900 transition-colors px-3 py-2">
+                  <button className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors px-3 py-2">
                     Sign In
                   </button>
                 </SignInButton>
@@ -110,7 +142,7 @@ export const Navbar = ({
                     window.location.hash = 'checkout?plan=professional&billing=annual';
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className="bg-gradient-to-r from-teal-600 via-teal-700 to-navy-900 text-white px-4 py-2 rounded-full font-bold hover:from-teal-700 hover:to-navy-800 transition-all text-xs shadow-sm flex items-center gap-1.5"
+                  className="bg-gradient-to-r from-teal-600 via-teal-700 to-slate-900 text-white px-4 py-2 rounded-full font-bold hover:from-teal-700 hover:to-slate-800 transition-all text-xs shadow-sm flex items-center gap-1.5"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-teal-300" />
                   <span>Subscribe</span>

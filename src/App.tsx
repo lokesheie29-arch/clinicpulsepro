@@ -10,9 +10,14 @@ import { OrgTypeSelectionModal } from './components/OrgTypeSelectionModal';
 import { LegalModal, LegalTab } from './components/LegalModal';
 import { PatientBillView } from './components/PatientBillView';
 import { CheckoutPage, PlanId, BillingCycle } from './components/CheckoutPage';
+import { AdminPanel } from './components/AdminPanel';
+import { TrialBanner } from './components/subscription/TrialBanner';
+import { TrialExpiredLock } from './components/subscription/TrialExpiredLock';
+import { SubscriptionDashboard } from './components/subscription/SubscriptionDashboard';
 import { AppStateProvider, useAppState } from './context/AppStateContext';
 import { ProcurementProvider } from './context/ProcurementContext';
 import { PaymentProvider } from './context/PaymentContext';
+import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
 import {
   Building2,
   UserCircle2,
@@ -27,7 +32,10 @@ import {
 const AppContent = () => {
   const { isSignedIn, user, isLoaded } = useUser();
   const { orgType, setOrgType } = useAppState();
+  const { canAccessApp, isTrialExpired, hasPaidAccess } = useSubscription();
+
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showSubscriptionDashboard, setShowSubscriptionDashboard] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showImportWizard, setShowImportWizard] = useState(false);
   const [showOrgTypeModal, setShowOrgTypeModal] = useState(false);
@@ -36,10 +44,19 @@ const AppContent = () => {
   const [billViewData, setBillViewData] = useState<{ id?: string; data?: string } | null>(null);
   const [checkoutParams, setCheckoutParams] = useState<{ plan?: PlanId; billing?: BillingCycle } | null>(null);
 
-  // Listen to URL hash for direct links (#privacy, #terms, #gst, #drug-license, #view-bill, #checkout)
+  // Listen to URL hash for direct links (#privacy, #terms, #gst, #drug-license, #view-bill, #checkout, #subscription)
   useEffect(() => {
     const handleHashChange = () => {
       const fullHash = window.location.hash.replace(/^#/, '');
+
+      // Check for subscription dashboard route
+      if (fullHash.startsWith('subscription') || fullHash.startsWith('billing') || fullHash.startsWith('plans')) {
+        setShowSubscriptionDashboard(true);
+        setCheckoutParams(null);
+        return;
+      } else {
+        setShowSubscriptionDashboard(false);
+      }
 
       // Check for subscription checkout route: #checkout or #checkout?plan=professional&billing=annual
       if (fullHash.startsWith('checkout')) {
@@ -117,6 +134,21 @@ const AppContent = () => {
     );
   }
 
+  // Access Control Gate:
+  // If user is signed in, not in checkout, and trial has expired without paid subscription
+  if (isSignedIn && !canAccessApp && !checkoutParams) {
+    return (
+      <TrialExpiredLock
+        onSelectPlan={(planId, frequency) => {
+          setCheckoutParams({
+            plan: planId as PlanId,
+            billing: frequency
+          });
+        }}
+      />
+    );
+  }
+
   const staffName = user?.firstName
     ? `${user.firstName} ${user.lastName || ''}`.trim()
     : user?.primaryEmailAddress?.emailAddress?.split('@')[0] || 'Staff Member';
@@ -129,20 +161,22 @@ const AppContent = () => {
       <Navbar
         onAdminClick={() => setShowAdmin(!showAdmin)}
         onProfileClick={() => setShowProfileModal(true)}
+        onSubscriptionClick={() => setShowSubscriptionDashboard(true)}
         showLandingPage={showLandingPage}
         onToggleLandingPage={() => setShowLandingPage(!showLandingPage)}
       />
 
-      {showAdmin && (
-        <div className="bg-amber-50 border-b border-amber-200 py-2.5 px-4 text-center text-sm text-amber-800 font-medium flex items-center justify-center gap-2">
-          <ShieldCheck className="h-4 w-4 text-amber-600" />
-          <span>Admin Access Active: Master Account ({user?.primaryEmailAddress?.emailAddress})</span>
-        </div>
-      )}
+      {/* Trial Countdown & Warning Notification Banner */}
+      <TrialBanner
+        onUpgradeClick={() => setCheckoutParams({ plan: 'professional', billing: 'annual' })}
+      />
 
       <main className="flex-grow">
-        {/* If user is checking out a subscription, show CheckoutPage */}
-        {checkoutParams ? (
+        {/* If Admin Panel is open */}
+        {showAdmin ? (
+          <AdminPanel onClose={() => setShowAdmin(false)} />
+        ) : checkoutParams ? (
+          /* If user is checking out a subscription, show CheckoutPage */
           <CheckoutPage
             initialPlan={checkoutParams.plan}
             initialBilling={checkoutParams.billing}
@@ -155,17 +189,31 @@ const AppContent = () => {
               window.location.hash = '';
             }}
           />
+        ) : showSubscriptionDashboard ? (
+          /* Subscription & Billing Dashboard */
+          <SubscriptionDashboard
+            onBack={() => {
+              setShowSubscriptionDashboard(false);
+              window.location.hash = '';
+            }}
+            onNavigateCheckout={(planId, freq) => {
+              setShowSubscriptionDashboard(false);
+              setCheckoutParams({ plan: planId as PlanId, billing: freq });
+            }}
+          />
         ) : isSignedIn && !showLandingPage ? (
           <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
             {/* Staff Welcome & Clinic Info Header */}
-            <div className="bg-gradient-to-r from-navy-900 via-navy-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg mb-8 relative overflow-hidden">
+            <div className="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg mb-8 relative overflow-hidden">
               <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-teal-500/10 skew-x-12 pointer-events-none" />
               
               <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-semibold mb-3 border border-teal-500/30">
                     <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
-                    <span>Clinic Operational System • Live</span>
+                    <span>
+                      {hasPaidAccess ? 'Commercial ERP License Active' : '30-Day Free Trial Evaluation'}
+                    </span>
                   </div>
                   <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
                     Welcome back, {staffName}
@@ -208,6 +256,14 @@ const AppContent = () => {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    onClick={() => setShowSubscriptionDashboard(true)}
+                    className="bg-teal-500/20 hover:bg-teal-500/30 text-teal-200 border border-teal-500/40 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all backdrop-blur-sm flex items-center gap-2 shadow-sm"
+                  >
+                    <Sparkles className="h-4 w-4 text-teal-300" />
+                    <span>Subscription & Billing</span>
+                  </button>
+
                   <button
                     onClick={() => setShowOrgTypeModal(true)}
                     className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 border border-purple-500/40 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all backdrop-blur-sm flex items-center gap-2 shadow-sm"
@@ -303,7 +359,9 @@ function App() {
     <AppStateProvider>
       <PaymentProvider>
         <ProcurementProvider>
-          <AppContent />
+          <SubscriptionProvider>
+            <AppContent />
+          </SubscriptionProvider>
         </ProcurementProvider>
       </PaymentProvider>
     </AppStateProvider>

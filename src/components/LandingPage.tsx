@@ -25,9 +25,9 @@ export const LandingPage = () => {
       <section className="relative overflow-hidden bg-navy-900 text-white pt-24 pb-32">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-teal-400 via-navy-900 to-navy-900"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-          <div className="inline-flex items-center space-x-2 bg-white/10 rounded-full px-4 py-1.5 mb-8 border border-white/20">
-            <ShieldCheck className="h-4 w-4 text-teal-400" />
-            <span className="text-sm font-medium">100% GST & FEFO Compliant for Indian Clinics</span>
+          <div className="inline-flex items-center space-x-2 bg-teal-500/20 text-teal-300 rounded-full px-4 py-1.5 mb-8 border border-teal-500/30">
+            <Sparkles className="h-4 w-4 text-teal-400" />
+            <span className="text-sm font-semibold">Automatic 30-Day Free Trial on Sign Up • 100% GST & FEFO Compliant</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">
             Smart Clinic ERP with <br className="hidden md:block" />
@@ -370,6 +370,7 @@ const PricingCard = ({ title, price, period, features, isPopular, planId }: any)
       <div className="mb-6">
         <span className="text-4xl font-extrabold text-navy-900">{price}</span>
         <span className="text-slate-500">{period}</span>
+        <span className="text-[11px] font-bold text-teal-600 block mt-1">Includes 30-Day Free Trial</span>
       </div>
       <ul className="space-y-4 mb-8 flex-1">
         {features.map((f: string, i: number) => (
