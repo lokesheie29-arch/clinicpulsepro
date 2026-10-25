@@ -18,6 +18,7 @@ import { AppStateProvider, useAppState } from './context/AppStateContext';
 import { ProcurementProvider } from './context/ProcurementContext';
 import { PaymentProvider } from './context/PaymentContext';
 import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
+import { BillingProvider } from './context/BillingContext';
 import {
   Building2,
   UserCircle2,
@@ -50,7 +51,12 @@ const AppContent = () => {
       const fullHash = window.location.hash.replace(/^#/, '');
 
       // Check for subscription dashboard route
-      if (fullHash.startsWith('subscription') || fullHash.startsWith('billing') || fullHash.startsWith('plans')) {
+      if (
+        fullHash.startsWith('subscription') || 
+        fullHash.startsWith('plans') || 
+        fullHash === 'billing' || 
+        fullHash === 'subscription-billing'
+      ) {
         setShowSubscriptionDashboard(true);
         setCheckoutParams(null);
         return;
@@ -360,7 +366,9 @@ function App() {
       <PaymentProvider>
         <ProcurementProvider>
           <SubscriptionProvider>
-            <AppContent />
+            <BillingProvider>
+              <AppContent />
+            </BillingProvider>
           </SubscriptionProvider>
         </ProcurementProvider>
       </PaymentProvider>
