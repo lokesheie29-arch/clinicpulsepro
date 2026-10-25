@@ -37,10 +37,10 @@ export const SUBSCRIPTION_PLANS: Record<PlanId, PlanDetails> = {
     id: 'starter',
     name: 'Starter Clinic',
     tagline: 'Ideal for standalone general practice clinics & small dispensaries',
-    monthlyPrice: 999,
-    quarterlyPrice: 2697, // 899/mo (10% off)
-    annualMonthlyPrice: 799,
-    annualPrice: 9588,
+    monthlyPrice: 499,
+    quarterlyPrice: 1347, // 449/mo (10% off)
+    annualMonthlyPrice: 399,
+    annualPrice: 4788,
     features: [
       'Single Branch / Counter Operations',
       'Up to 2 Doctor & Staff Logins',
@@ -54,10 +54,10 @@ export const SUBSCRIPTION_PLANS: Record<PlanId, PlanDetails> = {
     id: 'professional',
     name: 'Growth & Professional ERP',
     tagline: 'For multispecialty clinics, busy medical stores & diagnostic labs',
-    monthlyPrice: 2499,
-    quarterlyPrice: 6747, // 2249/mo (10% off)
-    annualMonthlyPrice: 1999,
-    annualPrice: 23988,
+    monthlyPrice: 999,
+    quarterlyPrice: 2697, // 899/mo (10% off)
+    annualMonthlyPrice: 799,
+    annualPrice: 9588,
     popular: true,
     features: [
       'Multi-Specialty & Laboratory Support',
@@ -74,10 +74,10 @@ export const SUBSCRIPTION_PLANS: Record<PlanId, PlanDetails> = {
     id: 'enterprise',
     name: 'Polyclinic & Hospital ERP Suite',
     tagline: 'For hospitals, healthcare chains & high-volume pharmacy networks',
-    monthlyPrice: 4999,
-    quarterlyPrice: 13497, // 4499/mo (10% off)
-    annualMonthlyPrice: 3999,
-    annualPrice: 47988,
+    monthlyPrice: 1999,
+    quarterlyPrice: 5397, // 1799/mo (10% off)
+    annualMonthlyPrice: 1599,
+    annualPrice: 19188,
     features: [
       'Unlimited Branches & Departments',
       'Unlimited Doctor & Admin Logins',

@@ -278,14 +278,14 @@ export const LandingPage = () => {
             <PricingCard 
               planId="starter"
               title="Starter Clinic"
-              price="₹999"
+              price="₹499"
               period="/month"
               features={['1 Doctor Profile', 'OPD + Billing', '100 WhatsApp Invoices/mo', 'Basic Pharmacy Stock', 'Email Support']}
             />
             <PricingCard 
               planId="professional"
               title="Growth Clinic"
-              price="₹2,499"
+              price="₹999"
               period="/month"
               features={['Up to 3 Doctors', 'Full ERP + Lab Diagnostics', 'FEFO Pharmacy & Expiry Alerts', 'Unlimited WhatsApp Billing', 'Priority Support']}
               isPopular
@@ -293,7 +293,7 @@ export const LandingPage = () => {
             <PricingCard 
               planId="enterprise"
               title="Polyclinic & Hospital"
-              price="₹4,999"
+              price="₹1,999"
               period="/month"
               features={['Unlimited Doctors', 'Purchase & Procurement Suite', 'Multiple Branches & Warehouses', 'Custom GST & Drug Licensing', 'Dedicated Account Manager']}
             />

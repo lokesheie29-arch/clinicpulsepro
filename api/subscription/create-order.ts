@@ -3,19 +3,19 @@ import type { VercelRequest, VercelResponse } from '../_types';
 // Server-side Plan Configuration (Never trust client prices)
 const PLAN_PRICES: Record<string, Record<string, number>> = {
   starter: {
-    monthly: 999,
-    quarterly: 2697, // 10% off
-    annual: 9588     // 20% off
+    monthly: 499,
+    quarterly: 1347, // 10% off
+    annual: 4788     // 20% off
   },
   professional: {
-    monthly: 2499,
-    quarterly: 6747,
-    annual: 23988
+    monthly: 999,
+    quarterly: 2697,
+    annual: 9588
   },
   enterprise: {
-    monthly: 4999,
-    quarterly: 13497,
-    annual: 47988
+    monthly: 1999,
+    quarterly: 5397,
+    annual: 19188
   }
 };
 

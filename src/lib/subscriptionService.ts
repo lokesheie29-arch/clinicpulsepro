@@ -13,9 +13,9 @@ export const DEFAULT_PLANS: SubscriptionPlan[] = [
     name: 'Starter Clinic',
     tagline: 'Ideal for standalone general practice clinics & small dispensaries',
     prices: {
-      monthly: 999,
-      quarterly: 2697, // 10% off (899/mo)
-      annual: 9588     // 20% off (799/mo - 2 months free)
+      monthly: 499,
+      quarterly: 1347, // 10% off (449/mo)
+      annual: 4788     // 20% off (399/mo - 2 months free)
     },
     currency: 'INR',
     features: [
@@ -33,9 +33,9 @@ export const DEFAULT_PLANS: SubscriptionPlan[] = [
     name: 'Growth & Professional ERP',
     tagline: 'For multispecialty clinics, busy medical stores & diagnostic labs',
     prices: {
-      monthly: 2499,
-      quarterly: 6747, // 10% off (2249/mo)
-      annual: 23988    // 20% off (1999/mo - 2 months free)
+      monthly: 999,
+      quarterly: 2697, // 10% off (899/mo)
+      annual: 9588     // 20% off (799/mo - 2 months free)
     },
     currency: 'INR',
     isPopular: true,
@@ -56,9 +56,9 @@ export const DEFAULT_PLANS: SubscriptionPlan[] = [
     name: 'Polyclinic & Hospital ERP Suite',
     tagline: 'For hospitals, healthcare chains & high-volume pharmacy networks',
     prices: {
-      monthly: 4999,
-      quarterly: 13497, // 10% off (4499/mo)
-      annual: 47988     // 20% off (3999/mo - 2 months free)
+      monthly: 1999,
+      quarterly: 5397, // 10% off (1799/mo)
+      annual: 19188    // 20% off (1599/mo - 2 months free)
     },
     currency: 'INR',
     features: [
