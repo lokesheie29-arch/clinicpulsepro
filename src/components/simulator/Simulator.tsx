@@ -8,11 +8,8 @@ import {
   Microscope,
   Building2,
   SlidersHorizontal,
-  Check,
   ShoppingCart,
-  CreditCard,
-  PlusCircle,
-  FileSpreadsheet
+  PlusCircle
 } from 'lucide-react';
 import { OpdConsultation } from './OpdConsultation';
 import { InvoiceHub } from './InvoiceHub';
@@ -20,7 +17,6 @@ import { PharmacyInventory } from './PharmacyInventory';
 import { Analytics } from './Analytics';
 import { LabDiagnostics } from './LabDiagnostics';
 import { ProcurementHub } from '../procurement/ProcurementHub';
-import { PaymentHub } from '../payments/PaymentHub';
 import { BillingHub } from '../billing/BillingHub';
 import { useAppState } from '../../context/AppStateContext';
 
@@ -40,11 +36,11 @@ export const Simulator = () => {
   // Sync default tab when orgType switches
   useEffect(() => {
     if (!showAllModules) {
-      if (orgType === 'laboratory' && !['lab', 'billing_gst', 'invoice', 'payments', 'analytics', 'procurement'].includes(activeTab)) {
+      if (orgType === 'laboratory' && !['lab', 'billing_gst', 'invoice', 'analytics', 'procurement'].includes(activeTab)) {
         setActiveTab('lab');
-      } else if (orgType === 'pharmacy' && !['opd', 'pharmacy', 'billing_gst', 'invoice', 'payments', 'analytics', 'procurement'].includes(activeTab)) {
+      } else if (orgType === 'pharmacy' && !['opd', 'pharmacy', 'billing_gst', 'invoice', 'analytics', 'procurement'].includes(activeTab)) {
         setActiveTab('opd');
-      } else if (orgType === 'hospital' && !['opd', 'lab', 'billing_gst', 'invoice', 'pharmacy', 'payments', 'analytics', 'procurement'].includes(activeTab)) {
+      } else if (orgType === 'hospital' && !['opd', 'lab', 'billing_gst', 'invoice', 'pharmacy', 'analytics', 'procurement'].includes(activeTab)) {
         setActiveTab('opd');
       }
     }
@@ -62,7 +58,6 @@ export const Simulator = () => {
       case 'billing_gst': return <BillingHub />;
       case 'invoice': return <InvoiceHub selectedInvoiceId={selectedInvoiceId} onNewBill={() => setActiveTab('opd')} />;
       case 'pharmacy': return <PharmacyInventory onNewBill={() => setActiveTab('opd')} />;
-      case 'payments': return <PaymentHub />;
       case 'analytics': return <Analytics />;
       case 'procurement': return <ProcurementHub />;
       default: return <OpdConsultation onComplete={handleInvoiceGenerated} />;
@@ -78,9 +73,8 @@ export const Simulator = () => {
         { id: 'billing_gst', label: '3. Billing & GST Hub', icon: <Receipt className="h-5 w-5 text-indigo-600" /> },
         { id: 'invoice', label: '4. WhatsApp Bills', icon: <Receipt className="h-5 w-5" /> },
         { id: 'pharmacy', label: '5. FEFO Pharmacy', icon: <Pill className="h-5 w-5" /> },
-        { id: 'payments', label: '6. Payments & UPI Banking', icon: <CreditCard className="h-5 w-5" /> },
-        { id: 'analytics', label: '7. Financial Analytics', icon: <BarChart3 className="h-5 w-5" /> },
-        { id: 'procurement', label: '8. Purchase & Procurement', icon: <ShoppingCart className="h-5 w-5" /> },
+        { id: 'analytics', label: '6. Financial Analytics', icon: <BarChart3 className="h-5 w-5" /> },
+        { id: 'procurement', label: '7. Purchase & Procurement', icon: <ShoppingCart className="h-5 w-5" /> },
       ];
     }
 
@@ -89,9 +83,8 @@ export const Simulator = () => {
         { id: 'lab', label: '1. Lab & Diagnostics', icon: <Microscope className="h-5 w-5" /> },
         { id: 'billing_gst', label: '2. Billing & GST Hub', icon: <Receipt className="h-5 w-5 text-indigo-600" /> },
         { id: 'invoice', label: '3. Lab WhatsApp Bills', icon: <Receipt className="h-5 w-5" /> },
-        { id: 'payments', label: '4. Payments & UPI Banking', icon: <CreditCard className="h-5 w-5" /> },
-        { id: 'analytics', label: '5. Financial Analytics', icon: <BarChart3 className="h-5 w-5" /> },
-        { id: 'procurement', label: '6. Purchase & Procurement', icon: <ShoppingCart className="h-5 w-5" /> },
+        { id: 'analytics', label: '4. Financial Analytics', icon: <BarChart3 className="h-5 w-5" /> },
+        { id: 'procurement', label: '5. Purchase & Procurement', icon: <ShoppingCart className="h-5 w-5" /> },
       ];
     }
 
@@ -101,9 +94,8 @@ export const Simulator = () => {
         { id: 'pharmacy', label: '2. FEFO Pharmacy Inventory', icon: <Pill className="h-5 w-5" /> },
         { id: 'billing_gst', label: '3. Billing & GST Hub', icon: <Receipt className="h-5 w-5 text-indigo-600" /> },
         { id: 'invoice', label: '4. Medicine Bills & WhatsApp', icon: <Receipt className="h-5 w-5" /> },
-        { id: 'payments', label: '5. Payments & UPI Banking', icon: <CreditCard className="h-5 w-5" /> },
-        { id: 'analytics', label: '6. Financial Analytics', icon: <BarChart3 className="h-5 w-5" /> },
-        { id: 'procurement', label: '7. Purchase & Procurement', icon: <ShoppingCart className="h-5 w-5" /> },
+        { id: 'analytics', label: '5. Financial Analytics', icon: <BarChart3 className="h-5 w-5" /> },
+        { id: 'procurement', label: '6. Purchase & Procurement', icon: <ShoppingCart className="h-5 w-5" /> },
       ];
     }
 
@@ -114,9 +106,8 @@ export const Simulator = () => {
       { id: 'billing_gst', label: '3. Billing & GST Hub', icon: <Receipt className="h-5 w-5 text-indigo-600" /> },
       { id: 'invoice', label: '4. WhatsApp Bills', icon: <Receipt className="h-5 w-5" /> },
       { id: 'pharmacy', label: '5. FEFO Pharmacy', icon: <Pill className="h-5 w-5" /> },
-      { id: 'payments', label: '6. Payments & UPI Banking', icon: <CreditCard className="h-5 w-5" /> },
-      { id: 'analytics', label: '7. Financial Analytics', icon: <BarChart3 className="h-5 w-5" /> },
-      { id: 'procurement', label: '8. Purchase & Procurement', icon: <ShoppingCart className="h-5 w-5" /> },
+      { id: 'analytics', label: '6. Financial Analytics', icon: <BarChart3 className="h-5 w-5" /> },
+      { id: 'procurement', label: '7. Purchase & Procurement', icon: <ShoppingCart className="h-5 w-5" /> },
     ];
   };
 
@@ -157,7 +148,7 @@ export const Simulator = () => {
               <span>{orgMeta.title}</span>
             </span>
             <span className="text-xs text-slate-400">
-              {showAllModules ? '(All Modules View - 8 Modules)' : `(${visibleTabs.length} Tailored Modules)`}
+              {showAllModules ? '(All Modules View - 7 Modules)' : `(${visibleTabs.length} Tailored Modules)`}
             </span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-navy-900">Live Healthcare ERP Simulator</h2>
@@ -173,7 +164,7 @@ export const Simulator = () => {
             title="Toggle between organization-specific modules and the full ERP suite"
           >
             <SlidersHorizontal className="h-3.5 w-3.5 text-teal-600" />
-            <span>{showAllModules ? 'Filter by Org Type' : 'Show All Modules (8)'}</span>
+            <span>{showAllModules ? 'Filter by Org Type' : 'Show All Modules (7)'}</span>
           </button>
 
           <button 
