@@ -662,7 +662,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
                           )}
 
                           {/* Cancel Invoice */}
-                          {!isCancelled && invStatus !== 'cancelled' && (
+                          {!isCancelled && (
                             <button
                               onClick={() => {
                                 setVoidModalInvoice(inv);
