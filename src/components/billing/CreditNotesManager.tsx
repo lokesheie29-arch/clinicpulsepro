@@ -150,18 +150,25 @@ export const CreditNotesManager: React.FC<CreditNotesManagerProps> = ({
       return;
     }
 
+    const invNum = activeInvoice.id || activeInvoice.invoiceNumber || '';
+    const invDate = activeInvoice.invoiceDate ? activeInvoice.invoiceDate.split('T')[0] : (activeInvoice.date || '');
+    const custName = activeInvoice.customerDetails?.name || activeInvoice.customerName || 'Patient';
+    const custGstin = activeInvoice.customerDetails?.gstin || activeInvoice.customerGstin;
+    const stateCode = activeInvoice.placeOfSupplyCode || activeInvoice.placeOfSupplyStateCode || '33';
+    const isPharma = activeInvoice.category === 'pharmacy' || activeInvoice.items.some(it => it.category === 'pharmacy');
+
     setIsSubmitting(true);
     try {
       await issueCreditNote({
         invoiceId: activeInvoice.id,
-        invoiceNumber: activeInvoice.invoiceNumber,
-        invoiceDate: activeInvoice.date,
+        invoiceNumber: invNum,
+        invoiceDate: invDate,
         financialYear: getCurrentFinancialYear(),
         reason,
         reasonDetails,
-        customerName: activeInvoice.customerName,
-        customerGstin: activeInvoice.customerGstin,
-        stateCode: activeInvoice.placeOfSupplyStateCode || '33',
+        customerName: custName,
+        customerGstin: custGstin,
+        stateCode,
         items: computedAdjustment.items,
         totalTaxableAdjustment: computedAdjustment.totalTaxable,
         totalCgstAdjustment: computedAdjustment.totalCgst,
@@ -170,7 +177,7 @@ export const CreditNotesManager: React.FC<CreditNotesManagerProps> = ({
         totalRefundAmount: computedAdjustment.totalRefund,
         refundMethod,
         refundStatus: 'completed',
-        stockRestocked: stockRestocked && activeInvoice.category === 'pharmacy'
+        stockRestocked: stockRestocked && isPharma
       });
 
       setIsModalOpen(false);
@@ -516,12 +523,18 @@ export const CreditNotesManager: React.FC<CreditNotesManagerProps> = ({
                 >
                   <option value="">-- Choose Issued Invoice --</option>
                   {invoices
-                    .filter(inv => inv.status === 'issued')
-                    .map(inv => (
-                      <option key={inv.id} value={inv.id}>
-                        {inv.invoiceNumber} — {inv.customerName} ({formatInr(inv.totalAmount)}) [{inv.date}]
-                      </option>
-                    ))}
+                    .filter(inv => (inv.invoiceStatus === 'issued' || inv.status === 'issued'))
+                    .map(inv => {
+                      const num = inv.id || inv.invoiceNumber || '';
+                      const name = inv.customerDetails?.name || inv.customerName || 'Patient';
+                      const tot = inv.grandTotal ?? inv.totalAmount ?? 0;
+                      const dt = inv.invoiceDate ? inv.invoiceDate.split('T')[0] : (inv.date || '');
+                      return (
+                        <option key={inv.id} value={inv.id}>
+                          {num} — {name} ({formatInr(tot)}) [{dt}]
+                        </option>
+                      );
+                    })}
                 </select>
               </div>
 
@@ -531,15 +544,23 @@ export const CreditNotesManager: React.FC<CreditNotesManagerProps> = ({
                   <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs flex justify-between items-center">
                     <div>
                       <span className="text-slate-400 block">Customer</span>
-                      <strong className="text-slate-800 text-sm">{activeInvoice.customerName}</strong>
-                      {activeInvoice.customerGstin && (
-                        <span className="font-mono text-purple-600 block mt-0.5">GSTIN: {activeInvoice.customerGstin}</span>
+                      <strong className="text-slate-800 text-sm">
+                        {activeInvoice.customerDetails?.name || activeInvoice.customerName}
+                      </strong>
+                      {(activeInvoice.customerDetails?.gstin || activeInvoice.customerGstin) && (
+                        <span className="font-mono text-purple-600 block mt-0.5">
+                          GSTIN: {activeInvoice.customerDetails?.gstin || activeInvoice.customerGstin}
+                        </span>
                       )}
                     </div>
                     <div className="text-right">
                       <span className="text-slate-400 block">Invoice Total</span>
-                      <strong className="text-slate-800 text-sm">{formatInr(activeInvoice.totalAmount)}</strong>
-                      <span className="text-slate-500 block mt-0.5 capitalize">{activeInvoice.category.replace('_', ' ')}</span>
+                      <strong className="text-slate-800 text-sm">
+                        {formatInr(activeInvoice.grandTotal ?? activeInvoice.totalAmount ?? 0)}
+                      </strong>
+                      <span className="text-slate-500 block mt-0.5 capitalize">
+                        {(activeInvoice.category || activeInvoice.items[0]?.category || 'healthcare').replace('_', ' ')}
+                      </span>
                     </div>
                   </div>
 
@@ -657,7 +678,7 @@ export const CreditNotesManager: React.FC<CreditNotesManagerProps> = ({
                   </div>
 
                   {/* Pharmacy Stock Restock Toggle */}
-                  {activeInvoice.category === 'pharmacy' && (
+                  {(activeInvoice.category === 'pharmacy' || activeInvoice.items.some(it => it.category === 'pharmacy')) && (
                     <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Package className="w-5 h-5 text-emerald-600" />

@@ -16,6 +16,8 @@ import {
 } from './gstEngine';
 import { supabase } from './supabase';
 
+export { roundPaise } from './gstEngine';
+
 const INVOICE_STORAGE_KEY = 'clinicpulse_billing_invoices_v1';
 const CN_STORAGE_KEY = 'clinicpulse_billing_credit_notes_v1';
 const TAX_PROFILE_KEY = 'clinicpulse_business_tax_profile_v1';
@@ -132,9 +134,11 @@ export const getInitialEnhancedInvoices = (): EnhancedInvoice[] => {
 
   const inv1: EnhancedInvoice = {
     id: 'INV/2026-27/0001',
+    invoiceNumber: 'INV/2026-27/0001',
     invoiceSequence: 1,
     series: 'INV-2627',
     invoiceDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     financialYear: fy,
     orgType: 'hospital',
     businessDetails: profile,
@@ -149,16 +153,30 @@ export const getInitialEnhancedInvoices = (): EnhancedInvoice[] => {
       patientId: 'PT-1001',
       doctorName: 'Dr. Rajesh Sharma, MD'
     },
+    customerName: 'Ramesh Kumar',
+    customerPhone: '9876543210',
+    customerType: 'b2c_patient',
+    isB2B: false,
+    category: 'opd_consultation',
     placeOfSupply: 'Tamil Nadu (33)',
     placeOfSupplyCode: '33',
+    placeOfSupplyStateName: 'Tamil Nadu',
+    placeOfSupplyStateCode: '33',
     isInterState: false,
     priceType: 'exclusive',
     items: inv1Items,
     ...summary1,
+    taxableAmount: summary1.totalTaxable,
+    cgstAmount: summary1.totalCgst,
+    sgstAmount: summary1.totalSgst,
+    igstAmount: summary1.totalIgst,
+    totalAmount: summary1.grandTotal,
     amountPaid: summary1.grandTotal,
+    paidAmount: summary1.grandTotal,
     balanceDue: 0,
     paymentStatus: 'paid',
     invoiceStatus: 'issued',
+    status: 'issued',
     payments: [
       {
         id: 'PAY-1001',
@@ -227,9 +245,11 @@ export const getInitialEnhancedInvoices = (): EnhancedInvoice[] => {
 
   const inv2: EnhancedInvoice = {
     id: 'INV/2026-27/0002',
+    invoiceNumber: 'INV/2026-27/0002',
     invoiceSequence: 2,
     series: 'INV-2627',
     invoiceDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     financialYear: fy,
     orgType: 'hospital',
     businessDetails: profile,
@@ -244,16 +264,31 @@ export const getInitialEnhancedInvoices = (): EnhancedInvoice[] => {
       stateCode: '29',
       gstin: '29AABCB1234P1Z4'
     },
+    customerName: 'BioTech Solutions India Pvt Ltd',
+    customerPhone: '9845012345',
+    customerGstin: '29AABCB1234P1Z4',
+    customerType: 'b2b_corporate',
+    isB2B: true,
+    category: 'lab_test',
     placeOfSupply: 'Karnataka (29)',
     placeOfSupplyCode: '29',
+    placeOfSupplyStateName: 'Karnataka',
+    placeOfSupplyStateCode: '29',
     isInterState: true,
     priceType: 'exclusive',
     items: inv2Items,
     ...summary2,
+    taxableAmount: summary2.totalTaxable,
+    cgstAmount: summary2.totalCgst,
+    sgstAmount: summary2.totalSgst,
+    igstAmount: summary2.totalIgst,
+    totalAmount: summary2.grandTotal,
     amountPaid: 5000,
+    paidAmount: 5000,
     balanceDue: roundPaise(summary2.grandTotal - 5000),
     paymentStatus: 'partial',
     invoiceStatus: 'issued',
+    status: 'issued',
     payments: [
       {
         id: 'PAY-1002',
@@ -362,7 +397,7 @@ export const appendAuditLog = (
       entity_id: entry.entityId,
       entity_type: entry.entityType,
       details: entry.details
-    }]).then(() => {}).catch(() => {});
+    }]).then(() => {}, () => {});
   }
 };
 
@@ -374,9 +409,7 @@ export const getNextInvoiceNumber = (
   prefix: string = 'INV',
   fy: string = getCurrentFinancialYear()
 ): { id: string; sequence: number; series: string } => {
-  const fyCode = fy.replace('-', '').substring(2, 6); // e.g. "2026-2027" -> "2627"
-  const series = `${prefix}-${fyCode}`;
-
+  const series = `${prefix}-${fy.replace('-', '').slice(2)}`;
   let maxSeq = 0;
   invoices.forEach(inv => {
     if (inv.financialYear === fy) {
@@ -438,10 +471,10 @@ export const filterRecordsByDate = <T extends { invoiceDate?: string; date?: str
 export const computeDashboardMetrics = (
   invoices: EnhancedInvoice[],
   creditNotes: CreditNote[],
-  filter?: DateRangeFilter
+  filter: DateRangeFilter
 ): BillingDashboardMetrics => {
-  const filteredInvoices = filter ? filterRecordsByDate(invoices, filter) : invoices;
-  const filteredCreditNotes = filter ? filterRecordsByDate(creditNotes, filter) : creditNotes;
+  const filteredInvoices = filterRecordsByDate(invoices, filter);
+  const filteredCreditNotes = filterRecordsByDate(creditNotes, filter);
 
   let totalInvoiceValue = 0;
   let totalTaxableValue = 0;
@@ -477,21 +510,31 @@ export const computeDashboardMetrics = (
   };
 
   filteredInvoices.forEach(inv => {
-    if (inv.invoiceStatus === 'cancelled') {
-      totalCancelledValue += inv.grandTotal;
+    if (inv.invoiceStatus === 'cancelled' || inv.status === 'cancelled') {
       cancelledCount++;
-      return; // Do not include cancelled in output sales
+      totalCancelledValue += (inv.grandTotal ?? inv.totalAmount ?? 0);
+      return; // Do not include cancelled bills in taxable revenue
     }
 
-    totalInvoiceValue += inv.grandTotal;
-    totalTaxableValue += inv.totalTaxable;
-    totalCgst += inv.totalCgst;
-    totalSgst += inv.totalSgst;
-    totalIgst += inv.totalIgst;
-    totalTax += inv.totalTax;
-    totalAmountReceived += inv.amountPaid;
-    outstandingReceivables += inv.balanceDue;
-    totalDiscounts += inv.totalDiscount;
+    const gTotal = inv.grandTotal ?? inv.totalAmount ?? 0;
+    const tTaxable = inv.totalTaxable ?? inv.taxableAmount ?? 0;
+    const tCgst = inv.totalCgst ?? inv.cgstAmount ?? 0;
+    const tSgst = inv.totalSgst ?? inv.sgstAmount ?? 0;
+    const tIgst = inv.totalIgst ?? inv.igstAmount ?? 0;
+    const tTax = inv.totalTax ?? (tCgst + tSgst + tIgst);
+    const aPaid = inv.amountPaid ?? inv.paidAmount ?? 0;
+    const bDue = inv.balanceDue ?? 0;
+    const tDisc = inv.totalDiscount ?? 0;
+
+    totalInvoiceValue += gTotal;
+    totalTaxableValue += tTaxable;
+    totalCgst += tCgst;
+    totalSgst += tSgst;
+    totalIgst += tIgst;
+    totalTax += tTax;
+    totalAmountReceived += aPaid;
+    outstandingReceivables += bDue;
+    totalDiscounts += tDisc;
 
     if (inv.paymentStatus === 'paid') paidCount++;
     else if (inv.paymentStatus === 'partial') partialCount++;
@@ -566,11 +609,37 @@ export const sanitizeCsvCell = (val: any): string => {
 };
 
 /**
- * Triggers safe client-side CSV download with UTF-8 BOM
+ * Polymorphic client-side CSV download helper supporting both:
+ * 1) downloadCsv(filename, headers, rows)
+ * 2) downloadCsv(rows, filename, columnDefs)
  */
-export const downloadCsv = (filename: string, headers: string[], rows: (string | number)[][]): void => {
+export function downloadCsv(
+  arg1: string | Record<string, any>[],
+  arg2: string[] | string,
+  arg3?: (string | number)[][] | { header: string; key: string }[]
+): void {
+  let filename: string;
+  let headers: string[];
+  let rowLines: string[];
+
+  if (typeof arg1 === 'string' && Array.isArray(arg2)) {
+    // Standard format: (filename, headers, rows)
+    filename = arg1;
+    headers = arg2;
+    const rows = (arg3 as (string | number)[][]) || [];
+    rowLines = rows.map(r => r.map(sanitizeCsvCell).join(','));
+  } else if (Array.isArray(arg1) && typeof arg2 === 'string') {
+    // Array of objects format: (rows, filename, columns)
+    const objects = arg1;
+    filename = arg2;
+    const cols = (arg3 as { header: string; key: string }[]) || [];
+    headers = cols.map(c => c.header);
+    rowLines = objects.map(obj => cols.map(c => sanitizeCsvCell(obj[c.key])).join(','));
+  } else {
+    return;
+  }
+
   const headerLine = headers.map(sanitizeCsvCell).join(',');
-  const rowLines = rows.map(row => row.map(sanitizeCsvCell).join(','));
   const csvContent = '\uFEFF' + [headerLine, ...rowLines].join('\r\n');
 
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -582,4 +651,4 @@ export const downloadCsv = (filename: string, headers: string[], rows: (string |
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
-};
+}

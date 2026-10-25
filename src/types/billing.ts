@@ -193,6 +193,25 @@ export interface EnhancedInvoice {
   invoiceStatus: InvoiceStatus;
   payments: InvoicePaymentRecord[];
 
+  // Convenience & backward-compatibility aliases
+  invoiceNumber?: string;
+  date?: string;
+  customerName?: string;
+  customerPhone?: string;
+  customerGstin?: string;
+  customerType?: CustomerType;
+  isB2B?: boolean;
+  category?: InvoiceCategory;
+  taxableAmount?: number;
+  cgstAmount?: number;
+  sgstAmount?: number;
+  igstAmount?: number;
+  totalAmount?: number;
+  paidAmount?: number;
+  status?: InvoiceStatus;
+  placeOfSupplyStateName?: string;
+  placeOfSupplyStateCode?: string;
+
   // Audit & Notes
   notes?: string;
   termsAndConditions?: string;

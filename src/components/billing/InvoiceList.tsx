@@ -32,6 +32,32 @@ interface InvoiceListProps {
   onIssueCreditNote: (invoice: EnhancedInvoice) => void;
 }
 
+// Property resolution helpers to handle both full object graphs & flat aliases
+const getInvNumber = (inv: EnhancedInvoice): string => inv.id || inv.invoiceNumber || '';
+const getInvDate = (inv: EnhancedInvoice): string => inv.invoiceDate ? inv.invoiceDate.split('T')[0] : (inv.date || '');
+const getCustName = (inv: EnhancedInvoice): string => inv.customerDetails?.name || inv.customerName || 'Unknown Patient';
+const getCustPhone = (inv: EnhancedInvoice): string => inv.customerDetails?.phone || inv.customerPhone || '';
+const getCustGstin = (inv: EnhancedInvoice): string => inv.customerDetails?.gstin || inv.customerGstin || '';
+const getCustType = (inv: EnhancedInvoice): string => inv.customerDetails?.type || inv.customerType || 'b2c_patient';
+const getIsB2B = (inv: EnhancedInvoice): boolean => {
+  if (typeof inv.isB2B === 'boolean') return inv.isB2B;
+  const gstin = inv.customerDetails?.gstin || inv.customerGstin;
+  return !!(gstin && gstin.trim().length === 15);
+};
+const getCategory = (inv: EnhancedInvoice): InvoiceCategory => {
+  return inv.category || inv.items?.[0]?.category || 'opd_consultation';
+};
+const getInvStatus = (inv: EnhancedInvoice): InvoiceStatus => {
+  return inv.invoiceStatus || inv.status || 'issued';
+};
+const getTaxable = (inv: EnhancedInvoice): number => inv.totalTaxable ?? inv.taxableAmount ?? 0;
+const getCgst = (inv: EnhancedInvoice): number => inv.totalCgst ?? inv.cgstAmount ?? 0;
+const getSgst = (inv: EnhancedInvoice): number => inv.totalSgst ?? inv.sgstAmount ?? 0;
+const getIgst = (inv: EnhancedInvoice): number => inv.totalIgst ?? inv.igstAmount ?? 0;
+const getGrandTotal = (inv: EnhancedInvoice): number => inv.grandTotal ?? inv.totalAmount ?? 0;
+const getPaid = (inv: EnhancedInvoice): number => inv.amountPaid ?? inv.paidAmount ?? 0;
+const getPlaceOfSupply = (inv: EnhancedInvoice): string => inv.placeOfSupply || inv.placeOfSupplyStateName || '';
+
 export const InvoiceList: React.FC<InvoiceListProps> = ({
   onSelectInvoice,
   onNewInvoice,
@@ -64,41 +90,49 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
   // Filtered & Sorted Invoices
   const filteredInvoices = useMemo(() => {
     return invoices.filter(inv => {
+      const invNum = getInvNumber(inv);
+      const custName = getCustName(inv);
+      const custPhone = getCustPhone(inv);
+      const custGstin = getCustGstin(inv);
+      const invStatus = getInvStatus(inv);
+      const category = getCategory(inv);
+      const isB2b = getIsB2B(inv);
+
       // Search text matches invoiceNumber, customer name, phone, gstin
       if (searchTerm) {
         const query = searchTerm.toLowerCase();
-        const matchNum = inv.invoiceNumber.toLowerCase().includes(query);
-        const matchCust = inv.customerName.toLowerCase().includes(query);
-        const matchPhone = inv.customerPhone?.toLowerCase().includes(query) ?? false;
-        const matchGstin = inv.customerGstin?.toLowerCase().includes(query) ?? false;
+        const matchNum = invNum.toLowerCase().includes(query);
+        const matchCust = custName.toLowerCase().includes(query);
+        const matchPhone = custPhone.toLowerCase().includes(query);
+        const matchGstin = custGstin.toLowerCase().includes(query);
         if (!matchNum && !matchCust && !matchPhone && !matchGstin) return false;
       }
 
       // Status filter
-      if (statusFilter !== 'all' && inv.status !== statusFilter) return false;
+      if (statusFilter !== 'all' && invStatus !== statusFilter) return false;
 
       // Payment filter
       if (paymentFilter !== 'all' && inv.paymentStatus !== paymentFilter) return false;
 
       // Category filter
-      if (categoryFilter !== 'all' && inv.category !== categoryFilter) return false;
+      if (categoryFilter !== 'all' && category !== categoryFilter) return false;
 
       // Customer type filter
       if (customerTypeFilter === 'b2b') {
-        if (!inv.isB2B && inv.customerType === 'b2c_patient') return false;
+        if (!isB2b) return false;
       } else if (customerTypeFilter === 'b2c') {
-        if (inv.isB2B || inv.customerType !== 'b2c_patient') return false;
+        if (isB2b) return false;
       }
 
       return true;
     }).sort((a, b) => {
       let comparison = 0;
       if (sortField === 'date') {
-        comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
+        comparison = new Date(getInvDate(a)).getTime() - new Date(getInvDate(b)).getTime();
       } else if (sortField === 'totalAmount') {
-        comparison = a.totalAmount - b.totalAmount;
+        comparison = getGrandTotal(a) - getGrandTotal(b);
       } else {
-        comparison = a.invoiceNumber.localeCompare(b.invoiceNumber);
+        comparison = getInvNumber(a).localeCompare(getInvNumber(b));
       }
       return sortAsc ? comparison : -comparison;
     });
@@ -113,12 +147,13 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
     let totalBalanceDue = 0;
 
     filteredInvoices.forEach(inv => {
-      if (inv.status !== 'cancelled') {
-        totalInvoiced += inv.totalAmount;
-        totalTaxable += inv.taxableAmount;
-        totalGst += inv.cgstAmount + inv.sgstAmount + inv.igstAmount;
-        totalPaid += inv.paidAmount;
-        totalBalanceDue += inv.balanceDue;
+      const invStatus = getInvStatus(inv);
+      if (invStatus !== 'cancelled') {
+        totalInvoiced += getGrandTotal(inv);
+        totalTaxable += getTaxable(inv);
+        totalGst += (getCgst(inv) + getSgst(inv) + getIgst(inv));
+        totalPaid += getPaid(inv);
+        totalBalanceDue += (inv.balanceDue || 0);
       }
     });
 
@@ -128,7 +163,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
   // Open Quick Pay Modal
   const openPaymentModal = (invoice: EnhancedInvoice) => {
     setPaymentModalInvoice(invoice);
-    setPaymentAmount(invoice.balanceDue > 0 ? invoice.balanceDue : invoice.totalAmount);
+    setPaymentAmount(invoice.balanceDue > 0 ? invoice.balanceDue : getGrandTotal(invoice));
     setPaymentMethod('cash');
     setPaymentRef('');
     setPaymentNotes('');
@@ -173,24 +208,24 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
   // Export Filtered Table to CSV
   const exportCsv = () => {
     const rows = filteredInvoices.map(inv => ({
-      invoiceNumber: inv.invoiceNumber,
-      date: inv.date,
-      customerName: inv.customerName,
-      customerType: inv.customerType,
-      isB2B: inv.isB2B ? 'Yes' : 'No',
-      customerGstin: inv.customerGstin || '',
-      placeOfSupply: inv.placeOfSupplyStateName,
-      category: inv.category,
-      taxableAmount: inv.taxableAmount,
-      cgstAmount: inv.cgstAmount,
-      sgstAmount: inv.sgstAmount,
-      igstAmount: inv.igstAmount,
-      totalTax: inv.cgstAmount + inv.sgstAmount + inv.igstAmount,
-      totalAmount: inv.totalAmount,
-      paidAmount: inv.paidAmount,
-      balanceDue: inv.balanceDue,
+      invoiceNumber: getInvNumber(inv),
+      date: getInvDate(inv),
+      customerName: getCustName(inv),
+      customerType: getCustType(inv),
+      isB2B: getIsB2B(inv) ? 'Yes' : 'No',
+      customerGstin: getCustGstin(inv),
+      placeOfSupply: getPlaceOfSupply(inv),
+      category: getCategory(inv),
+      taxableAmount: getTaxable(inv),
+      cgstAmount: getCgst(inv),
+      sgstAmount: getSgst(inv),
+      igstAmount: getIgst(inv),
+      totalTax: getCgst(inv) + getSgst(inv) + getIgst(inv),
+      totalAmount: getGrandTotal(inv),
+      paidAmount: getPaid(inv),
+      balanceDue: inv.balanceDue || 0,
       paymentStatus: inv.paymentStatus,
-      status: inv.status
+      status: getInvStatus(inv)
     }));
 
     downloadCsv(
@@ -454,7 +489,21 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredInvoices.map((inv) => {
-                  const isCancelled = inv.status === 'cancelled';
+                  const invNum = getInvNumber(inv);
+                  const invDate = getInvDate(inv);
+                  const custName = getCustName(inv);
+                  const custPhone = getCustPhone(inv);
+                  const custGstin = getCustGstin(inv);
+                  const isB2b = getIsB2B(inv);
+                  const category = getCategory(inv);
+                  const invStatus = getInvStatus(inv);
+                  const taxable = getTaxable(inv);
+                  const cgst = getCgst(inv);
+                  const sgst = getSgst(inv);
+                  const igst = getIgst(inv);
+                  const totalGst = cgst + sgst + igst;
+                  const grandTotal = getGrandTotal(inv);
+                  const isCancelled = invStatus === 'cancelled';
                   const isPaid = inv.paymentStatus === 'paid';
                   const isPartial = inv.paymentStatus === 'partial';
 
@@ -469,8 +518,8 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
                           onClick={() => onSelectInvoice(inv)}
                           className="hover:text-indigo-600 hover:underline flex items-center gap-1.5 font-bold"
                         >
-                          <span>{inv.invoiceNumber}</span>
-                          {inv.isB2B && (
+                          <span>{invNum}</span>
+                          {isB2b && (
                             <span className="text-[10px] bg-purple-100 text-purple-700 font-sans font-bold px-1.5 py-0.5 rounded">
                               B2B
                             </span>
@@ -480,19 +529,19 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
 
                       {/* Date */}
                       <td className="py-3.5 px-4 text-slate-600 whitespace-nowrap">
-                        {inv.date}
+                        {invDate}
                       </td>
 
                       {/* Customer / Patient */}
                       <td className="py-3.5 px-4">
                         <div className="font-semibold text-slate-800">
-                          {inv.customerName}
+                          {custName}
                         </div>
                         <div className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
-                          {inv.customerPhone && <span>{inv.customerPhone}</span>}
-                          {inv.customerGstin && (
+                          {custPhone && <span>{custPhone}</span>}
+                          {custGstin && (
                             <span className="font-mono text-[11px] text-purple-600 font-medium">
-                              GSTIN: {inv.customerGstin}
+                              GSTIN: {custGstin}
                             </span>
                           )}
                         </div>
@@ -501,29 +550,29 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
                       {/* Category */}
                       <td className="py-3.5 px-4">
                         <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 capitalize">
-                          {inv.category.replace('_', ' ')}
+                          {category.replace('_', ' ')}
                         </span>
                       </td>
 
                       {/* Taxable */}
                       <td className="py-3.5 px-4 text-right font-medium text-slate-600">
-                        {formatInr(inv.taxableAmount)}
+                        {formatInr(taxable)}
                       </td>
 
                       {/* GST Total */}
                       <td className="py-3.5 px-4 text-right text-xs">
                         <div className="font-semibold text-slate-700">
-                          {formatInr(inv.cgstAmount + inv.sgstAmount + inv.igstAmount)}
+                          {formatInr(totalGst)}
                         </div>
                         <div className="text-[11px] text-slate-400">
-                          {inv.igstAmount > 0 ? 'IGST' : 'CGST+SGST'}
+                          {igst > 0 ? 'IGST' : 'CGST+SGST'}
                         </div>
                       </td>
 
                       {/* Grand Total */}
                       <td className="py-3.5 px-4 text-right">
                         <div className="font-bold text-slate-900">
-                          {formatInr(inv.totalAmount)}
+                          {formatInr(grandTotal)}
                         </div>
                         {inv.balanceDue > 0 && !isCancelled && (
                           <div className="text-xs text-rose-600 font-medium">
@@ -563,11 +612,11 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-rose-50 text-rose-700 line-through">
                             Void / Cancelled
                           </span>
-                        ) : inv.status === 'credit_note_issued' ? (
+                        ) : invStatus === 'credit_note_issued' ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-purple-50 text-purple-700">
                             Credit Note
                           </span>
-                        ) : inv.status === 'draft' ? (
+                        ) : invStatus === 'draft' ? (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
                             Draft
                           </span>
@@ -602,7 +651,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
                           )}
 
                           {/* Issue Credit Note */}
-                          {!isCancelled && inv.status !== 'draft' && (
+                          {!isCancelled && invStatus !== 'draft' && (
                             <button
                               onClick={() => onIssueCreditNote(inv)}
                               className="p-1.5 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
@@ -613,7 +662,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
                           )}
 
                           {/* Cancel Invoice */}
-                          {!isCancelled && inv.status !== 'cancelled' && (
+                          {!isCancelled && invStatus !== 'cancelled' && (
                             <button
                               onClick={() => {
                                 setVoidModalInvoice(inv);
@@ -647,7 +696,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-800">Record Payment</h3>
-                  <p className="text-xs text-slate-500 font-mono">Invoice #{paymentModalInvoice.invoiceNumber}</p>
+                  <p className="text-xs text-slate-500 font-mono">Invoice #{getInvNumber(paymentModalInvoice)}</p>
                 </div>
               </div>
               <button
@@ -669,7 +718,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
                 <div className="text-right">
                   <span className="text-xs text-slate-500 block">Total Invoice</span>
                   <span className="text-sm font-semibold text-slate-700">
-                    {formatInr(paymentModalInvoice.totalAmount)}
+                    {formatInr(getGrandTotal(paymentModalInvoice))}
                   </span>
                 </div>
               </div>
@@ -764,7 +813,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
                 </div>
                 <div>
                   <h3 className="font-bold text-rose-900">Cancel & Void Invoice</h3>
-                  <p className="text-xs text-rose-700 font-mono">Invoice #{voidModalInvoice.invoiceNumber}</p>
+                  <p className="text-xs text-rose-700 font-mono">Invoice #{getInvNumber(voidModalInvoice)}</p>
                 </div>
               </div>
               <button

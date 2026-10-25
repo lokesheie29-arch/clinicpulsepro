@@ -183,8 +183,6 @@ export const NewInvoiceView: React.FC<NewInvoiceViewProps> = ({ onBack, onSucces
       quantity: 1,
       unit: category === 'pharmacy' ? 'Tabs' : 'Nos',
       unitPrice: 100,
-      discountAmount: 0,
-      gstRate: defaultClass.defaultGstRate,
       isExempt: defaultClass.treatment === 'exempt',
       taxTreatment: defaultClass.treatment,
       ...computed
@@ -217,8 +215,6 @@ export const NewInvoiceView: React.FC<NewInvoiceViewProps> = ({ onBack, onSucces
       quantity: 1,
       unit: 'Tabs',
       unitPrice: med.sellingPrice,
-      discountAmount: 0,
-      gstRate: rate as GstRate,
       isExempt: false,
       taxTreatment: 'taxable',
       batchNo: med.batchNo,

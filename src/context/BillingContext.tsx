@@ -283,7 +283,7 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         terms_and_conditions: newInvoice.termsAndConditions,
         created_at: newInvoice.createdAt,
         updated_at: newInvoice.updatedAt
-      }).then(() => {}).catch(() => {});
+      }).then(() => {}, () => {});
     }
 
     return newInvoice;
